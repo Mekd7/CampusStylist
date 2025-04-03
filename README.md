@@ -10,10 +10,10 @@ Team Members
 | Netsanet Rafael        | UGR/9486/15  |
 
 
-Project Description
+# Project Description
 CampusStylist is a mobile app that connects students with hairdressers on campus, allowing students to browse available hairdressers, book appointments, and view pricing and services. Hairdressers can manage their availability, service offerings, and appointment schedules efficiently.
 
-Business Features (With Full CRUD Operations)
+# Business Features (With Full CRUD Operations)
 1. Hairdresser Listings Management (CRUD)
 Create – Hairdressers can create and manage their profiles, listing their services, prices, and availability.
 
@@ -32,7 +32,7 @@ Update – Students can reschedule or cancel their bookings; hairdressers can up
 
 Delete – Users can remove past or canceled appointments from their schedules.
 
-Roles & Permissions
+# Roles & Permissions
 Student (Users looking for hair services)
 Hairdresser Listings: Read-only (can view, search, and filter listings).
 
@@ -43,7 +43,7 @@ Hairdresser Listings: Full CRUD (can create, update, and delete their own profil
 
 Booking & Appointment Scheduling: Read & Manage (can view and confirm/cancel appointments).
 
-Authentication & Authorization
+# Authentication & Authorization
 Signup, Sign-in, and Delete Account
 
 Role-Based Access Control (RBAC):
