@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.jetbrains.kotlin.jvm)
+    alias(libs.plugins.kotlinx.serialization) // Add this plugin
     id("application")
+    id("java")
 }
 
 java {
@@ -16,28 +18,31 @@ kotlin {
 
 dependencies {
     // Ktor dependencies
-    implementation("io.ktor:ktor-server-core:2.3.5")
-    implementation("io.ktor:ktor-server-netty:2.3.5")
-    implementation("io.ktor:ktor-server-auth:2.3.5")
-    implementation("io.ktor:ktor-server-auth-jwt:2.3.5")
-    implementation("io.ktor:ktor-server-content-negotiation:2.3.5")
-    implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.5")
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.server.auth)
+    implementation(libs.ktor.server.auth.jwt)
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+
+    // JWT token generation
+    implementation(libs.java.jwt)
 
     // PostgreSQL driver
-    implementation("org.postgresql:postgresql:42.7.3")
+    implementation(libs.postgresql)
 
     // Exposed (Kotlin SQL library)
-    implementation("org.jetbrains.exposed:exposed-core:0.41.1")
-    implementation("org.jetbrains.exposed:exposed-dao:0.41.1")
-    implementation("org.jetbrains.exposed:exposed-jdbc:0.41.1")
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.dao)
+    implementation(libs.exposed.jdbc)
 
     // Logging
-    implementation("ch.qos.logback:logback-classic:1.4.11")
+    implementation(libs.logback.classic)
 
     // Testing
-    testImplementation("io.ktor:ktor-server-tests:2.3.5")
-    testImplementation("org.jetbrains.kotlin:kotlin-test:1.9.0")
-    testImplementation("io.kotest:kotest-runner-junit5:5.6.2")
+    testImplementation(libs.ktor.server.tests)
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.kotest.runner.junit5)
 }
 
 application {

@@ -7,6 +7,8 @@ junit = "4.13.2"
 junitVersion = "1.2.1"
 espressoCore = "3.6.1"
 kotlinTest = "1.9.0"
+java-jwt = "4.4.0"
+kotest = "5.8.0"
 ktorSerializationKotlinxJson = "2.3.5"
 ktorServerAuth = "2.3.5"
 ktorServerAuthJwt = "2.3.5"
@@ -49,10 +51,13 @@ ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktorS
 ktor-server-tests = { module = "io.ktor:ktor-server-tests", version.ref = "ktorServerTests" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logbackClassic" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+java-jwt = { module = "com.auth0:java-jwt", version.ref = "java-jwt" }
+kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 jetbrains-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "jetbrainsKotlinJvm" }
+kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 
