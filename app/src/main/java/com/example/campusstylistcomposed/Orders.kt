@@ -7,7 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowLeft
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.campusstylistcomposed.ui.booking.BookingViewModel
-import com.example.campusstylistcomposed.R
 
 @Composable
 fun OrderScreen(
@@ -51,7 +50,7 @@ fun OrderScreen(
                 modifier = Modifier.align(Alignment.CenterStart)
             ) {
                 Icon(
-                    imageVector = Icons.Default.ArrowLeft,
+                    imageVector = Icons.Default.ArrowBack, // Updated from ArrowLeft
                     contentDescription = "Back",
                     tint = whiteColor
                 )

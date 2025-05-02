@@ -3,10 +3,10 @@ package com.example.campusstylistcomposed
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState // Keep this import
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll // Keep this import
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,33 +19,34 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-// You might need to adjust the import if LoginScreen is in a different file
-// import com.example.hairdresser.ui.theme.* // Example if you have a theme file
-
-
+import com.example.campusstylistcomposed.data.AuthRequest
+import com.example.campusstylistcomposed.network.RetrofitClient
+import kotlinx.coroutines.launch
 
 @Composable
-fun LoginScreen() {
-    // --- State Variables ---
+fun LoginScreen(
+    onNavigateToSignUp: () -> Unit,
+    onLoginSuccess: (String) -> Unit
+) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
-    // --- Colors (Same as SignUpScreen) ---
     val pinkColor = Color(0xFFE0136C)
     val darkColor = Color(0xFF222020)
     val grayColor = Color(0xFFA7A3A3)
 
-    // --- UI Structure ---
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(darkColor)
     ) {
-        // --- Fixed Wave Background (Same as SignUpScreen) ---
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(250.dp) // Adjust height if needed based on design
+                .height(250.dp)
         ) {
             val width = size.width
             val height = size.height
@@ -68,20 +69,17 @@ fun LoginScreen() {
             )
         }
 
-        // --- Scrollable Content Column (Same structure as SignUpScreen) ---
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState()) // Enable scrolling
-                .padding(horizontal = 24.dp, vertical = 24.dp), // Padding for content
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Spacer to push content below the wave
             Spacer(modifier = Modifier.height(180.dp))
 
-            // --- Updated Header Text ---
             Text(
-                text = "Welcome back", // Changed text
+                text = "Welcome back",
                 style = TextStyle(
                     color = Color.White,
                     fontSize = 40.sp,
@@ -93,7 +91,7 @@ fun LoginScreen() {
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "Login to CampusStylist", // Changed text
+                text = "Login to CampusStylist",
                 style = TextStyle(
                     color = grayColor,
                     fontSize = 18.sp
@@ -103,7 +101,6 @@ fun LoginScreen() {
                     .align(Alignment.Start)
             )
 
-            // --- Email Field (Same as SignUpScreen) ---
             Text(
                 text = "Email",
                 style = TextStyle(
@@ -137,7 +134,6 @@ fun LoginScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // --- Password Field (Same as SignUpScreen) ---
             Text(
                 text = "Password",
                 style = TextStyle(
@@ -172,54 +168,79 @@ fun LoginScreen() {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // --- Updated Login Button ---
-            Button(
-                onClick = { /* TODO: Handle login logic */ }, // Action for login
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = pinkColor // Same pink color
-                ),
-                shape = RoundedCornerShape(50) // Same rounded shape
-            ) {
+            if (isLoading) {
+                CircularProgressIndicator(color = pinkColor)
+            } else {
+                Button(
+                    onClick = {
+                        isLoading = true
+                        errorMessage = null
+                        coroutineScope.launch {
+                            try {
+                                val response = RetrofitClient.authApiService.login(
+                                    AuthRequest(email, password, "") // Role not needed for login, pass empty string
+                                )
+                                onLoginSuccess(response.token)
+                            } catch (e: Exception) {
+                                errorMessage = "Login failed: ${e.message}"
+                            } finally {
+                                isLoading = false
+                            }
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = pinkColor
+                    ),
+                    shape = RoundedCornerShape(50)
+                ) {
+                    Text(
+                        text = "Login",
+                        fontSize = 18.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            errorMessage?.let {
                 Text(
-                    text = "Login", // Changed button text
-                    fontSize = 18.sp
+                    text = it,
+                    style = TextStyle(
+                        color = Color.Red,
+                        fontSize = 16.sp
+                    ),
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
             }
 
-            // Spacer before the bottom link
-            Spacer(modifier = Modifier.height(32.dp)) // Adjust spacing as needed
-
-            // --- Updated Bottom Link ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Don't have an account? ", // Changed text
+                    text = "Don't have an account? ",
                     style = TextStyle(
                         color = grayColor,
                         fontSize = 16.sp
                     )
                 )
 
-                Text(
-                    text = "SIGN UP", // Changed text
-                    style = TextStyle(
-                        color = pinkColor, // Same pink color for link
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    modifier = Modifier
-                        .padding(start = 4.dp)
-                    // .clickable { /* TODO: Navigate to Sign Up Screen */ } // Add click listener for navigation
-                )
+                TextButton(onClick = onNavigateToSignUp) {
+                    Text(
+                        text = "SIGN UP",
+                        style = TextStyle(
+                            color = pinkColor,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
             }
 
-            // Padding at the bottom of the scrollable content
             Spacer(modifier = Modifier.height(24.dp))
         }
     }

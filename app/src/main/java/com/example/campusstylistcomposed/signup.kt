@@ -3,10 +3,10 @@ package com.example.campusstylistcomposed
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState // Keep this import
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll // Keep this import
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,13 +19,21 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-// You might need to adjust the import if LoginScreen is in a different file
-// import com.example.hairdresser.ui.theme.* // Example if you have a theme file
+import com.example.campusstylistcomposed.data.AuthRequest
+import com.example.campusstylistcomposed.network.RetrofitClient
+import kotlinx.coroutines.launch
 
 @Composable
-fun SignUpScreen() {
-    var email by remember { mutableStateOf("") }
+fun SignUpScreen(
+    onNavigateToLogin: () -> Unit,
+    onSignupSuccess: (String) -> Unit
+) {
+    var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var selectedRole by remember { mutableStateOf<String?>(null) } // Track selected role
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
 
     val pinkColor = Color(0xFFE0136C)
     val darkColor = Color(0xFF222020)
@@ -36,11 +44,10 @@ fun SignUpScreen() {
             .fillMaxSize()
             .background(darkColor)
     ) {
-        // Wave background - Stays fixed, does not scroll
         Canvas(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(250.dp) // Adjust height if needed based on design
+                .height(250.dp)
         ) {
             val width = size.width
             val height = size.height
@@ -63,21 +70,15 @@ fun SignUpScreen() {
             )
         }
 
-        // Scrollable Content Column
-        // Add verticalScroll modifier here
         Column(
             modifier = Modifier
-                .fillMaxSize() // Takes available space within the Box
-                .verticalScroll(rememberScrollState()) // Makes the content scrollable
-                .padding(horizontal = 24.dp, vertical = 24.dp), // Apply padding *inside* the scrollable area
-            // verticalArrangement = Arrangement.spacedBy(16.dp) // Can keep or use Spacers, Spacers are often clearer in scrollable content
-            horizontalAlignment = Alignment.CenterHorizontally // Center content horizontally
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Adjust this spacer to position content below the wave
-            // Ensure it doesn't overlap badly on small screens before scrolling
-            Spacer(modifier = Modifier.height(180.dp)) // Pushes content down below the wave
+            Spacer(modifier = Modifier.height(180.dp))
 
-            // Welcome text
             Text(
                 text = "Welcome!",
                 style = TextStyle(
@@ -85,10 +86,10 @@ fun SignUpScreen() {
                     fontSize = 40.sp,
                     fontWeight = FontWeight.Bold
                 ),
-                modifier = Modifier.align(Alignment.Start) // Align text to start
+                modifier = Modifier.align(Alignment.Start)
             )
 
-            Spacer(modifier = Modifier.height(8.dp)) // Added spacer for breathing room
+            Spacer(modifier = Modifier.height(8.dp))
 
             Text(
                 text = "Create an account to join CampusStylist",
@@ -98,10 +99,9 @@ fun SignUpScreen() {
                 ),
                 modifier = Modifier
                     .padding(bottom = 24.dp)
-                    .align(Alignment.Start) // Align text to start
+                    .align(Alignment.Start)
             )
 
-            // Email field Label
             Text(
                 text = "Email",
                 style = TextStyle(
@@ -110,14 +110,14 @@ fun SignUpScreen() {
                 ),
                 modifier = Modifier
                     .padding(bottom = 8.dp)
-                    .align(Alignment.Start) // Align text to start
+                    .align(Alignment.Start)
             )
 
             TextField(
-                value = email,
-                onValueChange = { email = it },
+                value = username,
+                onValueChange = { username = it },
                 modifier = Modifier
-                    .fillMaxWidth() // Fill width within padding
+                    .fillMaxWidth()
                     .height(56.dp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Black,
@@ -135,7 +135,6 @@ fun SignUpScreen() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Password field Label
             Text(
                 text = "Password",
                 style = TextStyle(
@@ -144,14 +143,14 @@ fun SignUpScreen() {
                 ),
                 modifier = Modifier
                     .padding(bottom = 8.dp)
-                    .align(Alignment.Start) // Align text to start
+                    .align(Alignment.Start)
             )
 
             TextField(
                 value = password,
                 onValueChange = { password = it },
                 modifier = Modifier
-                    .fillMaxWidth() // Fill width within padding
+                    .fillMaxWidth()
                     .height(56.dp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Black,
@@ -168,50 +167,116 @@ fun SignUpScreen() {
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
 
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Select Role",
+                style = TextStyle(
+                    color = Color.White,
+                    fontSize = 18.sp
+                ),
+                modifier = Modifier
+                    .padding(bottom = 8.dp)
+                    .align(Alignment.Start)
+            )
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Button(
+                    onClick = { selectedRole = "STUDENT" },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp)
+                        .padding(end = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (selectedRole == "STUDENT") pinkColor else grayColor
+                    ),
+                    shape = RoundedCornerShape(50)
+                ) {
+                    Text(
+                        text = "Client",
+                        fontSize = 16.sp,
+                        color = Color.White
+                    )
+                }
+
+                Button(
+                    onClick = { selectedRole = "HAIRDRESSER" },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp)
+                        .padding(start = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (selectedRole == "HAIRDRESSER") pinkColor else grayColor
+                    ),
+                    shape = RoundedCornerShape(50)
+                ) {
+                    Text(
+                        text = "Hairdresser",
+                        fontSize = 16.sp,
+                        color = Color.White
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (isLoading) {
+                CircularProgressIndicator(color = pinkColor)
+            } else {
+                Button(
+                    onClick = {
+                        isLoading = true
+                        errorMessage = null
+                        coroutineScope.launch {
+                            try {
+                                val response = RetrofitClient.authApiService.signup(
+                                    AuthRequest(username, password, selectedRole!!) // Role is guaranteed non-null
+                                )
+                                onSignupSuccess(response.token)
+                            } catch (e: Exception) {
+                                errorMessage = "Signup failed: ${e.message}"
+                            } finally {
+                                isLoading = false
+                            }
+                        }
+                    },
+                    enabled = selectedRole != null && username.isNotBlank() && password.isNotBlank(), // Enable only if role is selected
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = pinkColor,
+                        disabledContainerColor = grayColor
+                    ),
+                    shape = RoundedCornerShape(50)
+                ) {
+                    Text(
+                        text = "Sign Up",
+                        fontSize = 18.sp
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Sign up buttons
-            Button(
-                onClick = { /* Handle client sign up */ },
-                modifier = Modifier
-                    .fillMaxWidth() // Fill width within padding
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = pinkColor
-                ),
-                shape = RoundedCornerShape(50)
-            ) {
+            errorMessage?.let {
                 Text(
-                    text = "Sign Up as client",
-                    fontSize = 18.sp
+                    text = it,
+                    style = TextStyle(
+                        color = Color.Red,
+                        fontSize = 16.sp
+                    ),
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp)) // Reduced spacer
-
-            Button(
-                onClick = { /* Handle hair dresser sign up */ },
-                modifier = Modifier
-                    .fillMaxWidth() // Fill width within padding
-                    .height(56.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = pinkColor
-                ),
-                shape = RoundedCornerShape(50)
-            ) {
-                Text(
-                    text = "Sign Up as hair dresser",
-                    fontSize = 18.sp
-                )
-            }
-
-            // Use a Spacer to push the "Sign In" link towards the bottom
-            // Adjust height as needed, or add more content above
-            Spacer(modifier = Modifier.height(32.dp)) // Provides space before the final row
-
-            // Sign in link - now at the end of the scrollable content
             Row(
-                modifier = Modifier.fillMaxWidth(), // Fill width within padding
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -223,22 +288,19 @@ fun SignUpScreen() {
                     )
                 )
 
-                Text(
-                    text = "SIGN IN",
-                    style = TextStyle(
-                        color = pinkColor,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    ),
-                    // Consider adding clickable modifier here later
-                    modifier = Modifier.padding(start = 4.dp)
-                )
+                TextButton(onClick = onNavigateToLogin) {
+                    Text(
+                        text = "SIGN IN",
+                        style = TextStyle(
+                            color = pinkColor,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
             }
 
-            // Add some padding at the very bottom of the scrollable content
-            // ensures the last element isn't stuck at the absolute edge when scrolled down.
             Spacer(modifier = Modifier.height(24.dp))
-
         }
     }
 }

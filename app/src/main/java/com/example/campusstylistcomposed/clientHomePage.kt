@@ -27,7 +27,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
-fun CampusStylistApp() {
+fun ClientHomePage(
+    token: String,
+    onLogout: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -50,7 +53,7 @@ fun CampusStylistApp() {
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Stylist entries
+            // Placeholder StylistCard entries
             repeat(3) {
                 StylistCard()
                 Spacer(modifier = Modifier.height(24.dp))
@@ -60,7 +63,7 @@ fun CampusStylistApp() {
             Spacer(modifier = Modifier.height(60.dp))
         }
 
-        // Bottom navigation
+        // Bottom navigation with logout
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -68,7 +71,7 @@ fun CampusStylistApp() {
                 .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                 .background(Color(0xFFE0136C))
                 .padding(vertical = 12.dp),
-            horizontalArrangement = Arrangement.Center,
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = { /* TODO */ }) {
@@ -80,12 +83,19 @@ fun CampusStylistApp() {
                 )
             }
 
-            Spacer(modifier = Modifier.width(64.dp))
-
             IconButton(onClick = { /* TODO */ }) {
                 Icon(
                     imageVector = Icons.Default.ShoppingCart,
                     contentDescription = "Cart",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            IconButton(onClick = onLogout) {
+                Icon(
+                    painter = painterResource(id = android.R.drawable.ic_menu_close_clear_cancel),
+                    contentDescription = "Logout",
                     tint = Color.White,
                     modifier = Modifier.size(24.dp)
                 )
