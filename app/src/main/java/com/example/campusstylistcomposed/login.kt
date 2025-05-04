@@ -20,13 +20,14 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.campusstylistcomposed.data.AuthRequest
+import com.example.campusstylistcomposed.data.AuthResponse // Assuming this is the response model
 import com.example.campusstylistcomposed.network.RetrofitClient
 import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
     onNavigateToSignUp: () -> Unit,
-    onLoginSuccess: (String) -> Unit
+    onLoginSuccess: (String, Boolean) -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -178,9 +179,10 @@ fun LoginScreen(
                         coroutineScope.launch {
                             try {
                                 val response = RetrofitClient.authApiService.login(
-                                    AuthRequest(email, password, "") // Role not needed for login, pass empty string
+                                    AuthRequest(email, password, "") // Role not needed for login
                                 )
-                                onLoginSuccess(response.token)
+                                val isHairstylist = response.role == "HAIRDRESSER" // Infer from response
+                                onLoginSuccess(response.token, isHairstylist)
                             } catch (e: Exception) {
                                 errorMessage = "Login failed: ${e.message}"
                             } finally {

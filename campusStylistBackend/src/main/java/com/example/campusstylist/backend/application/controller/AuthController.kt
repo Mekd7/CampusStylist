@@ -8,19 +8,23 @@ import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.serialization.Serializable // Add this import
+import io.ktor.server.auth.*
+import io.ktor.server.auth.jwt.*
+import kotlinx.serialization.Serializable
 import org.slf4j.LoggerFactory
 
-@Serializable // Add this annotation
+@Serializable
 data class AuthRequest(val username: String, val password: String, val role: String? = null)
 
-@Serializable // Add this annotation
-data class AuthResponse(val token: String)
+@Serializable
+data class AuthResponse(val token: String, val role: String) // Add role field
 
 fun Route.authRoutes(userService: UserService) {
     val logger = LoggerFactory.getLogger("AuthController")
-    route("/auth") {
-        post("/signup") {
+
+    // Remove /auth prefix to match frontend expectations
+    route("/signup") {
+        post {
             val request = try {
                 call.receive<AuthRequest>()
             } catch (e: BadRequestException) {
@@ -37,14 +41,16 @@ fun Route.authRoutes(userService: UserService) {
             try {
                 val user = userService.signup(request.username, request.password, request.role)
                 val token = JwtConfig.generateToken(user.id, user.role.toString())
-                call.respond(AuthResponse(token))
+                call.respond(AuthResponse(token, user.role.toString())) // Include role in response
             } catch (e: IllegalArgumentException) {
                 logger.warn("Signup failed: ${e.message}")
                 call.respond(HttpStatusCode.BadRequest, e.message ?: "Signup failed")
             }
         }
+    }
 
-        post("/signin") {
+    route("/login") { // Change /auth/signin to /login
+        post {
             val request = try {
                 call.receive<AuthRequest>()
             } catch (e: BadRequestException) {
@@ -52,14 +58,28 @@ fun Route.authRoutes(userService: UserService) {
                 call.respond(HttpStatusCode.BadRequest, "Invalid request body: ${e.message}")
                 return@post
             }
-            logger.info("Received signin request: username=${request.username}")
+            logger.info("Received login request: username=${request.username}")
             val user = userService.signin(request.username, request.password)
             if (user == null) {
                 call.respond(HttpStatusCode.Unauthorized, "Invalid credentials")
                 return@post
             }
             val token = JwtConfig.generateToken(user.id, user.role.toString())
-            call.respond(AuthResponse(token))
+            call.respond(AuthResponse(token, user.role.toString())) // Include role in response
+        }
+    }
+
+    // Optional: Add /me endpoint for future use
+    authenticate("auth-jwt") {
+        get("/me") {
+            val principal = call.principal<JWTPrincipal>()
+            val username = principal?.payload?.getClaim("username")?.asString()
+            val role = principal?.payload?.getClaim("role")?.asString()
+            if (username != null && role != null) {
+                call.respond(HttpStatusCode.OK, mapOf("username" to username, "role" to role))
+            } else {
+                call.respond(HttpStatusCode.Unauthorized, "Invalid token")
+            }
         }
     }
 }

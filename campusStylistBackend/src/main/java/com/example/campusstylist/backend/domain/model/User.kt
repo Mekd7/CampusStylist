@@ -1,11 +1,12 @@
-
-
 package com.example.campusstylist.backend.domain.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class User(
-    val id: Long = 0,
+    val id: Long, // Changed to Long to match Users.id
     val username: String,
-    val password: String, // In production, this should be hashed
+    val password: String,
     val role: Role
 )
 

@@ -1,8 +1,9 @@
 plugins {
     alias(libs.plugins.jetbrains.kotlin.jvm)
-    alias(libs.plugins.kotlinx.serialization) // Add this plugin
+    alias(libs.plugins.kotlinx.serialization)
     id("application")
     id("java")
+    alias(libs.plugins.ktor)
 }
 
 java {
@@ -38,6 +39,9 @@ dependencies {
 
     // Logging
     implementation(libs.logback.classic)
+
+    // Kotlin Coroutines
+    implementation(libs.kotlinx.coroutines.core)
 
     // Testing
     testImplementation(libs.ktor.server.tests)
