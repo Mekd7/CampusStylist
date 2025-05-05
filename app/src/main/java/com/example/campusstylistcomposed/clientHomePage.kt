@@ -8,8 +8,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -25,11 +25,17 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.Home
+
+
 
 @Composable
 fun ClientHomePage(
     token: String,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onAddPostClick: (String) -> Unit,
+    onEditProfileClick: (String) -> Unit,
+    onAddBookingClick: (String) -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -74,7 +80,7 @@ fun ClientHomePage(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { /* TODO */ }) {
+            IconButton(onClick = { /* Already on Home screen */ }) {
                 Icon(
                     imageVector = Icons.Default.Home,
                     contentDescription = "Home",
@@ -82,16 +88,22 @@ fun ClientHomePage(
                     modifier = Modifier.size(24.dp)
                 )
             }
-
-            IconButton(onClick = { /* TODO */ }) {
+            IconButton(onClick = { onAddBookingClick(token) }) {
                 Icon(
-                    imageVector = Icons.Default.ShoppingCart,
-                    contentDescription = "Cart",
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add Booking",
                     tint = Color.White,
                     modifier = Modifier.size(24.dp)
                 )
             }
-
+            IconButton(onClick = { onEditProfileClick(token) }) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Profile",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
             IconButton(onClick = onLogout) {
                 Icon(
                     painter = painterResource(id = android.R.drawable.ic_menu_close_clear_cancel),
