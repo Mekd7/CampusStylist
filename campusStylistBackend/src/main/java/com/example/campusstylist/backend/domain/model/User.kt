@@ -4,12 +4,17 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class User(
-    val id: Long, // Changed to Long to match Users.id
+    val id: Long? = null,
     val username: String,
     val password: String,
-    val role: Role
+    val role: Role,
+    val profilePicture: String? = null,
+    val bio: String? = null,
+    val name: String? = null,
+    val hasCreatedProfile: Boolean = false,
+    val email: String
 )
 
-enum class Role {
-    STUDENT, HAIRDRESSER
-}
+//enum class Role {
+//    STUDENT, HAIRDRESSER
+//}

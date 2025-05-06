@@ -7,7 +7,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class UserService(private val userRepository: UserRepository) {
 
-    fun signup(username: String, password: String, role: String): User {
+    fun signup(email: String, password: String, role: String): User {
         val parsedRole = try {
             Role.valueOf(role.uppercase())
         } catch (e: IllegalArgumentException) {
@@ -15,23 +15,24 @@ class UserService(private val userRepository: UserRepository) {
         }
 
         val user = User(
-            id = 0, // ID will be set by the repository
-            username = username,
+            id = null,
+            email = email,
+            username = email.split("@")[0],
             password = password,
             role = parsedRole
         )
 
         return transaction {
-            userRepository.findByUsername(username)?.let {
-                throw IllegalArgumentException("Username already exists")
+            userRepository.findByEmail(email)?.let {
+                throw IllegalArgumentException("Email already exists")
             }
             userRepository.create(user)
         }
     }
 
-    fun signin(username: String, password: String): User? {
+    fun signin(email: String, password: String): User? {
         val user = transaction {
-            userRepository.findByUsername(username)
+            userRepository.findByEmail(email)
         } ?: return null
 
         if (user.password != password) { // In a real app, use password hashing
@@ -39,5 +40,23 @@ class UserService(private val userRepository: UserRepository) {
         }
 
         return user
+    }
+
+    fun findByEmail(email: String): User? {
+        return transaction {
+            userRepository.findByEmail(email)
+        }
+    }
+
+    fun update(user: User): Boolean {
+        return transaction {
+            userRepository.update(user)
+        }
+    }
+
+    fun delete(id: Long): Boolean {
+        return transaction {
+            userRepository.delete(id)
+        }
     }
 }

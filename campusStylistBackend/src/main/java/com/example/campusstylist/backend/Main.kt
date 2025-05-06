@@ -1,160 +1,73 @@
 package com.example.campusstylist.backend
 
-import com.example.campusstylist.backend.application.controller.authRoutes
-import com.example.campusstylist.backend.domain.service.UserService
+import com.example.campusstylist.backend.application.controller.*
+import com.example.campusstylist.backend.domain.model.Service
+import com.example.campusstylist.backend.domain.service.*
 import com.example.campusstylist.backend.infrastructure.DatabaseConfig
-import com.example.campusstylist.backend.infrastructure.repository.UserRepository
-import com.example.campusstylist.backend.infrastructure.repository.Users // Import Users from repository
-import com.example.campusstylist.backend.infrastructure.security.configureJwt
+import com.example.campusstylist.backend.infrastructure.repository.*
+import com.example.campusstylist.backend.infrastructure.security.JwtConfig
+import com.example.campusstylist.backend.infrastructure.table.Services
 import io.ktor.server.application.*
-import io.ktor.server.auth.Authentication
+import io.ktor.server.auth.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.routing.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.json
-import io.ktor.server.response.*
-import io.ktor.server.request.*
-import kotlinx.serialization.Serializable
-import org.jetbrains.exposed.sql.*
+import io.ktor.serialization.kotlinx.json.*
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-
-// Data classes for API requests/responses
-@Serializable
-data class RequestDto(val id: Int, val userName: String, val service: String)
-
-@Serializable
-data class BookingDto(val userName: String, val service: String)
-
-// Database table definitions
-object Requests : Table() {
-    val id = integer("id").autoIncrement()
-    val userName = varchar("user_name", 255)
-    val service = varchar("service", 255)
-    override val primaryKey = PrimaryKey(id)
-}
-
-object Bookings : Table() {
-    val id = integer("id").autoIncrement()
-    val userName = varchar("user_name", 255)
-    val service = varchar("service", 255)
-    override val primaryKey = PrimaryKey(id)
-}
+import org.slf4j.LoggerFactory
+import org.jetbrains.exposed.sql.*
 
 fun main() {
-    embeddedServer(Netty, port = 8080) {
-        // Initialize database via DatabaseConfig
-        DatabaseConfig.init()
-
-        // Create tables if they don't exist
-        transaction {
-            SchemaUtils.create(Requests, Bookings)
-
-            // Seed requests table if empty
-            if (Requests.selectAll().count() == 0L) {
-                Requests.insert { it[userName] = "Amy"; it[service] = "braids" }
-                Requests.insert { it[userName] = "Beza"; it[service] = "Lace Installation" }
-                Requests.insert { it[userName] = "Biruck"; it[service] = "Lace Installation" }
-                Requests.insert { it[userName] = "Mekd"; it[service] = "palestra" }
-                Requests.insert { it[userName] = "Leul"; it[service] = "Hair wash" }
-            }
-        }
-
+    embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
         install(ContentNegotiation) {
-            json() // Ensure this works with kotlinx.serialization
+            json()
         }
-        install(Authentication) {
-            configureJwt()
-        }
-        install(Routing) {
-            authRoutes(UserService(UserRepository()))
+        install(Authentication, JwtConfig.configureJwt())
+        DatabaseConfig.init()
+        val userRepository = UserRepository()
+        val postRepository = PostRepository()
+        val requestRepository = RequestRepository()
+        val bookingRepository = BookingRepository()
+        val serviceRepository = ServiceRepository()
+        val userService = UserService(userRepository)
+        val postService = PostService(postRepository)
+        val requestService = RequestService(requestRepository)
+        val bookingService = BookingService(bookingRepository)
+        val serviceService = ServiceService(serviceRepository)
 
-            // GET /requests - Fetch all requests
-            get("/requests") {
-                val requests = transaction {
-                    Requests.selectAll().map {
-                        RequestDto(
-                            id = it[Requests.id],
-                            userName = it[Requests.userName],
-                            service = it[Requests.service]
-                        )
-                    }
-                }
-                call.respond(requests)
-            }
-
-            // DELETE /requests/{id} - Delete a request
-            delete("/requests/{id}") {
-                val id = call.parameters["id"]?.toIntOrNull()
-                if (id == null) {
-                    call.respond(HttpStatusCode.BadRequest, "Invalid ID")
-                    return@delete
-                }
-
-                val deletedRows = transaction {
-                    Requests.deleteWhere { Requests.id eq id }
-                }
-
-                if (deletedRows > 0) {
-                    call.respond(HttpStatusCode.OK, "Request deleted")
+        // Seed services
+        val logger = LoggerFactory.getLogger("MainKt")
+        try {
+            transaction {
+                val serviceCount = Services.selectAll().count()
+                if (serviceCount == 0L) {
+                    logger.info("Seeding Services table...")
+                    serviceService.create(Service(name = "Basic Haircut", price = 200.0))
+                    serviceService.create(Service(name = "Layered Cut", price = 300.0))
+                    serviceService.create(Service(name = "Braids", price = 500.0))
+                    serviceService.create(Service(name = "Cornrows", price = 600.0))
+                    serviceService.create(Service(name = "Updo", price = 400.0))
+                    serviceService.create(Service(name = "Hair Coloring", price = 800.0))
+                    serviceService.create(Service(name = "Hair Treatment", price = 700.0))
+                    serviceService.create(Service(name = "Extensions", price = 1200.0))
+                    logger.info("Services table seeded successfully.")
                 } else {
-                    call.respond(HttpStatusCode.NotFound, "Request not found")
+                    logger.info("Services table already contains $serviceCount records.")
                 }
             }
+        } catch (e: Exception) {
+            logger.error("Failed to seed Services table: ${e.message}", e)
+            throw RuntimeException("Failed to initialize application due to seeding error", e)
+        }
 
-            // POST /bookings - Create a booking
-            post("/bookings") {
-                val booking = call.receive<BookingDto>()
-                val newBookingId = transaction {
-                    Bookings.insert {
-                        it[userName] = booking.userName
-                        it[service] = booking.service
-                    } get Bookings.id
-                }
-                call.respond(HttpStatusCode.Created, "Booking created with ID $newBookingId")
-            }
-
-            // POST /requests/{id}/addToBooking - Add a request to bookings and delete the request
-            post("/requests/{id}/addToBooking") {
-                val id = call.parameters["id"]?.toIntOrNull()
-                if (id == null) {
-                    call.respond(HttpStatusCode.BadRequest, "Invalid ID")
-                    return@post
-                }
-
-                val request = transaction {
-                    Requests.select { Requests.id eq id }.singleOrNull()?.let {
-                        RequestDto(
-                            id = it[Requests.id],
-                            userName = it[Requests.userName],
-                            service = it[Requests.service]
-                        )
-                    }
-                }
-
-                if (request == null) {
-                    call.respond(HttpStatusCode.NotFound, "Request not found")
-                    return@post
-                }
-
-                transaction {
-                    // Create booking
-                    Bookings.insert {
-                        it[userName] = request.userName
-                        it[service] = request.service
-                    }
-                    // Delete request
-                    Requests.deleteWhere { Requests.id eq id }
-                }
-
-                call.respond(HttpStatusCode.OK, mapOf(
-                    "message" to "Booking created and request deleted",
-                    "userName" to request.userName,
-                    "service" to request.service
-                ))
-            }
+        routing {
+            authRoutes(userService)
+            userRoutes(userService)
+            postRoutes(postService, userService)
+            requestRoutes(requestService)
+            bookingRoutes(bookingService)
+            serviceRoutes(serviceService)
         }
     }.start(wait = true)
 }
