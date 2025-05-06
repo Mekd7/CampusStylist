@@ -1,5 +1,6 @@
 package com.example.campusstylistcomposed.ui.screens
 
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -19,21 +20,20 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.campusstylistcomposed.data.AuthRequest
-import com.example.campusstylistcomposed.network.RetrofitClient
-import kotlinx.coroutines.launch
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.campusstylistcomposed.ui.viewmodel.SignUpViewModel
 
 @Composable
 fun SignUpScreen(
     onNavigateToLogin: () -> Unit,
     onSignupSuccess: (String, Boolean) -> Unit
 ) {
+    val viewModel: SignUpViewModel = viewModel()
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var selectedRole by remember { mutableStateOf<String?>(null) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var isLoading by remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
+    val selectedRole by viewModel.isHairdresser.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
 
     val pinkColor = Color(0xFFE0136C)
     val darkColor = Color(0xFF222020)
@@ -103,7 +103,7 @@ fun SignUpScreen(
             )
 
             Text(
-                text = "Email",
+                text = "Username",
                 style = TextStyle(
                     color = Color.White,
                     fontSize = 18.sp
@@ -115,7 +115,7 @@ fun SignUpScreen(
 
             TextField(
                 value = username,
-                onValueChange = { username = it },
+                onValueChange = { username = it; viewModel.updateUsername(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -130,7 +130,7 @@ fun SignUpScreen(
                     unfocusedIndicatorColor = Color.Transparent
                 ),
                 shape = RoundedCornerShape(50),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -148,7 +148,7 @@ fun SignUpScreen(
 
             TextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = { password = it; viewModel.updatePassword(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -187,13 +187,13 @@ fun SignUpScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Button(
-                    onClick = { selectedRole = "STUDENT" },
+                    onClick = { viewModel.setRole(false) },
                     modifier = Modifier
                         .weight(1f)
                         .height(56.dp)
                         .padding(end = 8.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selectedRole == "STUDENT") pinkColor else grayColor
+                        containerColor = if (!selectedRole) pinkColor else grayColor
                     ),
                     shape = RoundedCornerShape(50)
                 ) {
@@ -205,13 +205,13 @@ fun SignUpScreen(
                 }
 
                 Button(
-                    onClick = { selectedRole = "HAIRDRESSER" },
+                    onClick = { viewModel.setRole(true) },
                     modifier = Modifier
                         .weight(1f)
                         .height(56.dp)
                         .padding(start = 8.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (selectedRole == "HAIRDRESSER") pinkColor else grayColor
+                        containerColor = if (selectedRole) pinkColor else grayColor
                     ),
                     shape = RoundedCornerShape(50)
                 ) {
@@ -229,24 +229,8 @@ fun SignUpScreen(
                 CircularProgressIndicator(color = pinkColor)
             } else {
                 Button(
-                    onClick = {
-                        isLoading = true
-                        errorMessage = null
-                        coroutineScope.launch {
-                            try {
-                                val response = RetrofitClient.authApiService.signup(
-                                    AuthRequest(username, password, selectedRole!!)
-                                )
-                                val isHairdresser = selectedRole == "HAIRDRESSER"
-                                onSignupSuccess(response.token, isHairdresser)
-                            } catch (e: Exception) {
-                                errorMessage = "Signup failed: ${e.message}"
-                            } finally {
-                                isLoading = false
-                            }
-                        }
-                    },
-                    enabled = selectedRole != null && username.isNotBlank() && password.isNotBlank(),
+                    onClick = { viewModel.signUp(onSignupSuccess) },
+                    enabled = username.isNotBlank() && password.isNotBlank(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),

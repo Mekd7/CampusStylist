@@ -1,5 +1,6 @@
 package com.example.campusstylistcomposed.ui.screens
 
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -21,22 +22,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.campusstylistcomposed.ui.viewmodel.LoginViewModel
-import com.example.campusstylistcomposed.data.AuthRequest
-import com.example.campusstylistcomposed.data.AuthResponse
-import com.example.campusstylistcomposed.network.RetrofitClient
-import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
     onNavigateToSignUp: () -> Unit,
-    onLoginSuccess: (String, Boolean) -> Unit,
-    viewModel: LoginViewModel = viewModel()
+    onLoginSuccess: (String, Boolean) -> Unit
 ) {
-    val email by viewModel.email.collectAsState()
-    val password by viewModel.password.collectAsState()
+    val viewModel: LoginViewModel = viewModel()
+    var username by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     val errorMessage by viewModel.errorMessage.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-    val coroutineScope = rememberCoroutineScope()
 
     val pinkColor = Color(0xFFE0136C)
     val darkColor = Color(0xFF222020)
@@ -106,7 +102,7 @@ fun LoginScreen(
             )
 
             Text(
-                text = "Email",
+                text = "Username",
                 style = TextStyle(
                     color = Color.White,
                     fontSize = 18.sp
@@ -117,8 +113,8 @@ fun LoginScreen(
             )
 
             TextField(
-                value = email,
-                onValueChange = { viewModel.updateEmail(it) },
+                value = username,
+                onValueChange = { username = it; viewModel.updateUsername(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -133,7 +129,7 @@ fun LoginScreen(
                     unfocusedIndicatorColor = Color.Transparent
                 ),
                 shape = RoundedCornerShape(50),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -151,7 +147,7 @@ fun LoginScreen(
 
             TextField(
                 value = password,
-                onValueChange = { viewModel.updatePassword(it) },
+                onValueChange = { password = it; viewModel.updatePassword(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -176,11 +172,7 @@ fun LoginScreen(
                 CircularProgressIndicator(color = pinkColor)
             } else {
                 Button(
-                    onClick = {
-                        viewModel.login { token, isHairdresser ->
-                            onLoginSuccess(token, isHairdresser)
-                        }
-                    },
+                    onClick = { viewModel.login(onLoginSuccess) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),

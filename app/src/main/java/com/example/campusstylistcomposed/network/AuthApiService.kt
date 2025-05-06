@@ -1,14 +1,36 @@
 package com.example.campusstylistcomposed.network
 
-import com.example.campusstylistcomposed.data.AuthRequest
-import com.example.campusstylistcomposed.data.AuthResponse
+import com.google.gson.annotations.SerializedName
 import retrofit2.http.Body
 import retrofit2.http.POST
 
-interface AuthApiService {
-    @POST("signup")
-    suspend fun signup(@Body request: AuthRequest): AuthResponse
+data class LoginRequest(
+    val username: String,
+    val password: String
+)
 
-    @POST("login")
-    suspend fun login(@Body request: AuthRequest): AuthResponse
+data class LoginResponse(
+    val token: String,
+    @SerializedName("role") val role: String,
+    @SerializedName("hasCreatedProfile") val hasCreatedProfile: Boolean
+)
+
+data class SignUpRequest(
+    val username: String,
+    val password: String,
+    val role: String
+)
+
+data class SignUpResponse(
+    val token: String,
+    @SerializedName("role") val role: String,
+    @SerializedName("hasCreatedProfile") val hasCreatedProfile: Boolean
+)
+
+interface ApiService {
+    @POST("auth/login")
+    suspend fun login(@Body request: LoginRequest): LoginResponse
+
+    @POST("auth/register")
+    suspend fun signUp(@Body request: SignUpRequest): SignUpResponse
 }
