@@ -1,4 +1,4 @@
-package com.example.campusstylistcomposed
+package com.example.campusstylistcomposed.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -19,6 +19,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.campusstylistcomposed.R
 
 @Composable
 fun EditProfile(

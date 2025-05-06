@@ -1,4 +1,4 @@
-package com.example.campusstylistcomposed
+package com.example.campusstylistcomposed.ui.screens
 
 import android.app.Application
 import dagger.hilt.android.HiltAndroidApp

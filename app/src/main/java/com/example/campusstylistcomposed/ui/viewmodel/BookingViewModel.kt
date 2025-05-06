@@ -3,8 +3,8 @@ package com.example.campusstylistcomposed.ui.booking
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
-import com.example.campusstylistcomposed.Service
-import com.example.campusstylistcomposed.Order
+import com.example.campusstylistcomposed.ui.screens.Service
+import com.example.campusstylistcomposed.ui.screens.Order
 import java.util.Date
 
 class BookingViewModel : ViewModel() {

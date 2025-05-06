@@ -1,4 +1,4 @@
-package com.example.campusstylistcomposed
+package com.example.campusstylistcomposed.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -10,11 +10,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -25,9 +26,10 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.material.icons.filled.Home
-
-
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.campusstylistcomposed.ui.viewmodel.ClientHomeViewModel
+import com.example.campusstylistcomposed.ui.viewmodel.Stylist
+import com.example.campusstylistcomposed.R
 
 @Composable
 fun ClientHomePage(
@@ -35,21 +37,26 @@ fun ClientHomePage(
     onLogout: () -> Unit,
     onAddPostClick: (String) -> Unit,
     onEditProfileClick: (String) -> Unit,
-    onAddBookingClick: (String) -> Unit
+    onAddBookingClick: (String) -> Unit,
+    viewModel: ClientHomeViewModel = viewModel()
 ) {
+    LaunchedEffect(token) {
+        viewModel.setToken(token)
+    }
+
+    val stylists by viewModel.stylists.collectAsState()
+
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF222020))
     ) {
-        // Main content
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(start = 16.dp, end = 16.dp, top = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            // App title
             Text(
                 text = "CampusStylist!",
                 fontSize = 20.sp,
@@ -59,17 +66,14 @@ fun ClientHomePage(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Placeholder StylistCard entries
-            repeat(3) {
-                StylistCard()
+            stylists.forEach { stylist ->
+                StylistCard(stylist)
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
-            // Extra space at bottom for navigation bar
             Spacer(modifier = Modifier.height(60.dp))
         }
 
-        // Bottom navigation with logout
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -88,7 +92,7 @@ fun ClientHomePage(
                     modifier = Modifier.size(24.dp)
                 )
             }
-            IconButton(onClick = { onAddBookingClick(token) }) {
+            IconButton(onClick = { viewModel.navigateToAddBooking(onAddBookingClick) }) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add Booking",
@@ -96,7 +100,7 @@ fun ClientHomePage(
                     modifier = Modifier.size(24.dp)
                 )
             }
-            IconButton(onClick = { onEditProfileClick(token) }) {
+            IconButton(onClick = { viewModel.navigateToEditProfile(onEditProfileClick) }) {
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = "Profile",
@@ -104,7 +108,7 @@ fun ClientHomePage(
                     modifier = Modifier.size(24.dp)
                 )
             }
-            IconButton(onClick = onLogout) {
+            IconButton(onClick = { viewModel.logout(onLogout) }) {
                 Icon(
                     painter = painterResource(id = android.R.drawable.ic_menu_close_clear_cancel),
                     contentDescription = "Logout",
@@ -117,14 +121,12 @@ fun ClientHomePage(
 }
 
 @Composable
-fun StylistCard() {
+fun StylistCard(stylist: Stylist) {
     Column {
-        // Stylist info row
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(bottom = 8.dp)
         ) {
-            // Profile icon
             Box(
                 modifier = Modifier
                     .size(32.dp)
@@ -140,17 +142,15 @@ fun StylistCard() {
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Stylist name
             Text(
-                text = "Stylist Name",
+                text = stylist.name,
                 fontSize = 16.sp,
                 color = Color(0xFFA7A3A3)
             )
         }
 
-        // Hair image
         Image(
-            painter = painterResource(id = R.drawable.campstylist),
+            painter = painterResource(id = stylist.imageResId),
             contentDescription = "Hairstyle",
             contentScale = ContentScale.Crop,
             modifier = Modifier
@@ -159,9 +159,8 @@ fun StylistCard() {
                 .padding(bottom = 12.dp)
         )
 
-        // Visit profile button
         TextButton(
-            onClick = { /* TODO */ },
+            onClick = { /* TODO: Navigate to profile */ },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(40.dp)

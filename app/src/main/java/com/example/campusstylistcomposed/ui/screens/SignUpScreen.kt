@@ -1,4 +1,4 @@
-package com.example.campusstylistcomposed
+package com.example.campusstylistcomposed.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -26,11 +26,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun SignUpScreen(
     onNavigateToLogin: () -> Unit,
-    onSignupSuccess: (String) -> Unit
+    onSignupSuccess: (String, Boolean) -> Unit
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var selectedRole by remember { mutableStateOf<String?>(null) } // Track selected role
+    var selectedRole by remember { mutableStateOf<String?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
@@ -235,9 +235,10 @@ fun SignUpScreen(
                         coroutineScope.launch {
                             try {
                                 val response = RetrofitClient.authApiService.signup(
-                                    AuthRequest(username, password, selectedRole!!) // Role is guaranteed non-null
+                                    AuthRequest(username, password, selectedRole!!)
                                 )
-                                onSignupSuccess(response.token)
+                                val isHairdresser = selectedRole == "HAIRDRESSER"
+                                onSignupSuccess(response.token, isHairdresser)
                             } catch (e: Exception) {
                                 errorMessage = "Signup failed: ${e.message}"
                             } finally {
@@ -245,7 +246,7 @@ fun SignUpScreen(
                             }
                         }
                     },
-                    enabled = selectedRole != null && username.isNotBlank() && password.isNotBlank(), // Enable only if role is selected
+                    enabled = selectedRole != null && username.isNotBlank() && password.isNotBlank(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),

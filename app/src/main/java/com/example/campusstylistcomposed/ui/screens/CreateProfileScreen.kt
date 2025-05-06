@@ -1,6 +1,4 @@
-package com.example.campusstylistcomposed
-
-
+package com.example.campusstylistcomposed.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -33,6 +31,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.campusstylistcomposed.ui.viewmodel.CreateProfileViewModel
 
 @Preview(
     showBackground = true,
@@ -41,21 +41,28 @@ import androidx.compose.ui.tooling.preview.Preview
 )
 @Composable
 fun CreateProfileScreenPreview() {
-    CreateProfileScreen()
+    CreateProfileScreen(token = "mock-token", isHairdresser = false, onProfileCreated = {})
 }
 
 @Composable
-fun CreateProfileScreen() {
-    // State for input fields
-    var name by remember { mutableStateOf("") }
-    var bio by remember { mutableStateOf("") }
+fun CreateProfileScreen(
+    token: String,
+    isHairdresser: Boolean,
+    onProfileCreated: () -> Unit,
+    viewModel: CreateProfileViewModel = viewModel()
+) {
+    LaunchedEffect(Unit) {
+        viewModel.setInitialData(token, isHairdresser)
+    }
 
-    // Colors from Figma
+    var name by remember { mutableStateOf(viewModel.name.value) }
+    var bio by remember { mutableStateOf(viewModel.bio.value) }
+
     val darkBackgroundColor = Color(0xFF222020)
     val pinkColor = Color(0xFFE0136C)
     val whiteColor = Color(0xFFFFFFFF)
     val placeholderGrayColor = Color(0xFFD9D9D9)
-    val textGrayColor = Color(0xFFA7A3A3) // Assuming a gray for placeholder text if needed
+    val textGrayColor = Color(0xFFA7A3A3)
 
     Box(
         modifier = Modifier
@@ -69,14 +76,12 @@ fun CreateProfileScreen() {
                 .padding(horizontal = 24.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Header: Back Arrow and Title
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 32.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Back Arrow Button (using a simple Canvas triangle for now)
                 IconButton(
                     onClick = { /* TODO: Handle back navigation */ },
                     modifier = Modifier.size(24.dp)
@@ -86,9 +91,8 @@ fun CreateProfileScreen() {
                             moveTo(size.width, 0f)
                             lineTo(0f, size.height / 2)
                             lineTo(size.width, size.height)
-                            close() // Ensure it's closed for filling if needed, though stroke is common
+                            close()
                         }
-                        // Using white for better contrast than D9D9D9
                         drawPath(path, color = whiteColor)
                     }
                 }
@@ -99,21 +103,19 @@ fun CreateProfileScreen() {
                     text = "Create Profile",
                     color = whiteColor,
                     fontSize = 24.sp,
-                    fontWeight = FontWeight.Black // 900 maps to Black
+                    fontWeight = FontWeight.Black
                 )
             }
 
-            // Profile Picture Section
             Box(
                 modifier = Modifier
-                    .size(120.dp) // Adjust size as needed
+                    .size(120.dp)
                     .clip(CircleShape)
                     .background(placeholderGrayColor)
                     .clickable { /* TODO: Handle image upload */ },
                 contentAlignment = Alignment.Center
             ) {
-                // Placeholder Icon or Text if needed, or leave empty
-                // Example: Icon(Icons.Default.Person, contentDescription = "Profile Placeholder", tint = darkBackgroundColor)
+                // Placeholder for profile image
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -122,13 +124,12 @@ fun CreateProfileScreen() {
                 text = "Upload picture",
                 color = pinkColor,
                 fontSize = 24.sp,
-                fontWeight = FontWeight.Normal, // 400 maps to Normal
+                fontWeight = FontWeight.Normal,
                 modifier = Modifier.clickable { /* TODO: Handle image upload */ }
             )
 
             Spacer(modifier = Modifier.height(48.dp))
 
-            // Your Name Input
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "Your Name",
@@ -139,7 +140,7 @@ fun CreateProfileScreen() {
                 )
                 BasicTextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = { name = it; viewModel.updateName(it) },
                     textStyle = TextStyle(
                         color = whiteColor,
                         fontSize = 18.sp
@@ -155,7 +156,6 @@ fun CreateProfileScreen() {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Bio Input
             Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "Bio",
@@ -166,41 +166,41 @@ fun CreateProfileScreen() {
                 )
                 BasicTextField(
                     value = bio,
-                    onValueChange = { bio = it },
+                    onValueChange = { bio = it; viewModel.updateBio(it) },
                     textStyle = TextStyle(
                         color = whiteColor,
                         fontSize = 18.sp
                     ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 80.dp) // Allow multiple lines for bio
+                        .heightIn(min = 80.dp)
                         .padding(vertical = 8.dp),
                     cursorBrush = SolidColor(whiteColor)
-                    // Consider adding maxLines = 4 or similar
                 )
                 Divider(color = pinkColor, thickness = 1.dp)
             }
 
-            Spacer(modifier = Modifier.height(64.dp)) // More space before button
+            Spacer(modifier = Modifier.height(64.dp))
 
-            // Create Profile Button
             Button(
-                onClick = { /* TODO: Handle profile creation logic */ },
+                onClick = {
+                    viewModel.createProfile(onSuccess = onProfileCreated)
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(30.dp), // Match Figma border radius
+                shape = RoundedCornerShape(30.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = pinkColor)
             ) {
                 Text(
                     text = "Create Profile",
                     color = whiteColor,
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Black // 900 maps to Black
+                    fontWeight = FontWeight.Black
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp)) // Padding at the bottom
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.example.campusstylistcomposed
+package com.example.campusstylistcomposed.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -19,20 +19,23 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.campusstylistcomposed.ui.viewmodel.LoginViewModel
 import com.example.campusstylistcomposed.data.AuthRequest
-import com.example.campusstylistcomposed.data.AuthResponse // Assuming this is the response model
+import com.example.campusstylistcomposed.data.AuthResponse
 import com.example.campusstylistcomposed.network.RetrofitClient
 import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
     onNavigateToSignUp: () -> Unit,
-    onLoginSuccess: (String, Boolean) -> Unit
+    onLoginSuccess: (String, Boolean) -> Unit,
+    viewModel: LoginViewModel = viewModel()
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
-    var isLoading by remember { mutableStateOf(false) }
+    val email by viewModel.email.collectAsState()
+    val password by viewModel.password.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
     val coroutineScope = rememberCoroutineScope()
 
     val pinkColor = Color(0xFFE0136C)
@@ -115,7 +118,7 @@ fun LoginScreen(
 
             TextField(
                 value = email,
-                onValueChange = { email = it },
+                onValueChange = { viewModel.updateEmail(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -148,7 +151,7 @@ fun LoginScreen(
 
             TextField(
                 value = password,
-                onValueChange = { password = it },
+                onValueChange = { viewModel.updatePassword(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -174,20 +177,8 @@ fun LoginScreen(
             } else {
                 Button(
                     onClick = {
-                        isLoading = true
-                        errorMessage = null
-                        coroutineScope.launch {
-                            try {
-                                val response = RetrofitClient.authApiService.login(
-                                    AuthRequest(email, password, "") // Role not needed for login
-                                )
-                                val isHairstylist = response.role == "HAIRDRESSER" // Infer from response
-                                onLoginSuccess(response.token, isHairstylist)
-                            } catch (e: Exception) {
-                                errorMessage = "Login failed: ${e.message}"
-                            } finally {
-                                isLoading = false
-                            }
+                        viewModel.login { token, isHairdresser ->
+                            onLoginSuccess(token, isHairdresser)
                         }
                     },
                     modifier = Modifier

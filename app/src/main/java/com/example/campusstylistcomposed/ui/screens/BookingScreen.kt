@@ -1,4 +1,4 @@
-package com.example.campusstylistcomposed
+package com.example.campusstylistcomposed.ui.screens
 
 import android.widget.CalendarView
 import androidx.compose.foundation.Image
