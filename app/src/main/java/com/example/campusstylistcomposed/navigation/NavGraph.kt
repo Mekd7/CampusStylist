@@ -29,16 +29,32 @@ fun SetupNavGraph(navController: NavHostController) {
             LoginScreen(
                 onNavigateToSignUp = { navController.navigate("signup") },
                 onLoginSuccess = { token, isHairdresser ->
-                    if (isHairdresser) navController.navigate("hairdresserHome/$token")
-                    else navController.navigate("clientHome/$token")
+                    if (isHairdresser) {
+                        navController.navigate("hairdresserHome/$token") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate("clientHome/$token") {
+                            popUpTo("login") { inclusive = true }
+                        }
+                    }
                 }
             )
         }
         composable("signup") {
             SignUpScreen(
                 onNavigateToLogin = { navController.navigate("login") },
-                onSignupSuccess = { token, isHairdresser ->
-                    navController.navigate("createProfile/$token/$isHairdresser")
+                onSignupSuccess = { role, hasCreatedProfile, userId ->
+                    val isHairdresser = role.uppercase() == "HAIRSTYLIST"
+                    if (hasCreatedProfile) {
+                        navController.navigate(if (isHairdresser) "hairdresserHome/$userId" else "clientHome/$userId") {
+                            popUpTo("signup") { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate("createProfile/$userId/$isHairdresser") {
+                            popUpTo("signup") { inclusive = true }
+                        }
+                    }
                 }
             )
         }
@@ -54,36 +70,97 @@ fun SetupNavGraph(navController: NavHostController) {
             CreateProfileScreen(
                 token = token,
                 isHairdresser = isHairdresser,
-                onProfileCreated = { navController.navigate(if (isHairdresser) "hairdresserHome/$token" else "clientHome/$token") },
+                onProfileCreated = {
+                    navController.navigate(if (isHairdresser) "hairdresserHome/$token" else "clientHome/$token") {
+                        popUpTo("createProfile/{token}/{isHairdresser}") { inclusive = true }
+                    }
+                },
                 viewModel = viewModel()
             )
         }
-        composable("clientHome/{token}") { backStackEntry ->
+        composable(
+            "clientHome/{token}",
+            arguments = listOf(navArgument("token") { defaultValue = "" })
+        ) { backStackEntry ->
             val token = backStackEntry.arguments?.getString("token") ?: ""
             ClientHomePage(
                 token = token,
-                onLogout = { navController.navigate("login") },
-                onAddPostClick = { token -> navController.navigate("addPost") },
-                onEditProfileClick = { token -> navController.navigate("profile") },
-                onAddBookingClick = { token -> navController.navigate("addBooking") },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onAddPostClick = { navController.navigate("addPost/$token") },
+                onEditProfileClick = { navController.navigate("profile/$token") },
+                onAddBookingClick = { navController.navigate("addBooking/$token") },
                 viewModel = viewModel()
             )
         }
-        composable("hairdresserHome/{token}") { backStackEntry ->
+        composable(
+            "hairdresserHome/{token}",
+            arguments = listOf(navArgument("token") { defaultValue = "" })
+        ) { backStackEntry ->
             val token = backStackEntry.arguments?.getString("token") ?: ""
             HairDresserHomePage(
                 token = token,
-                onLogout = { navController.navigate("login") },
-                onManageScheduleClick = { navController.navigate("manageSchedule") },
+                onLogout = {
+                    navController.navigate("login") {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onManageScheduleClick = { navController.navigate("manageSchedule/$token") },
                 viewModel = viewModel()
             )
         }
-        composable("profile") { ProfileScreen(navController) }
-        composable("manageSchedule") { ManageScheduleScreen(navController) }
-        composable("myRequests") { MyRequestsScreen(navController) }
-        composable("addBooking") { AddBookingScreen(navController, onBackClick = { navController.popBackStack() }) }
-        composable("editBooking") { EditBookingScreen(navController, onBackClick = { navController.popBackStack() }) }
-        composable("addPost") { AddPostScreen(navController, onBackClick = { navController.popBackStack() }, onPostSuccess = { navController.popBackStack() }) }
-        composable("editPost") { EditPostScreen(navController, onBackClick = { navController.popBackStack() }) }
+        composable(
+            "profile/{token}",
+            arguments = listOf(navArgument("token") { defaultValue = "" })
+        ) { backStackEntry ->
+            val token = backStackEntry.arguments?.getString("token") ?: ""
+            ProfileScreen(navController)
+        }
+        composable(
+            "manageSchedule/{token}",
+            arguments = listOf(navArgument("token") { defaultValue = "" })
+        ) { backStackEntry ->
+            val token = backStackEntry.arguments?.getString("token") ?: ""
+            ManageScheduleScreen(navController)
+        }
+        composable(
+            "addBooking/{token}",
+            arguments = listOf(navArgument("token") { defaultValue = "" })
+        ) { backStackEntry ->
+            val token = backStackEntry.arguments?.getString("token") ?: ""
+            AddBookingScreen(
+                navController = navController,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        composable(
+            "addPost/{token}",
+            arguments = listOf(navArgument("token") { defaultValue = "" })
+        ) { backStackEntry ->
+            val token = backStackEntry.arguments?.getString("token") ?: ""
+            AddPostScreen(
+                navController = navController,
+                onBackClick = { navController.popBackStack() },
+                onPostSuccess = { navController.popBackStack() }
+            )
+        }
+        composable("myRequests") {
+            MyRequestsScreen(navController)
+        }
+        composable("editBooking") {
+            EditBookingScreen(
+                navController = navController,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        composable("editPost") {
+            EditPostScreen(
+                navController = navController,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
     }
 }

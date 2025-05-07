@@ -1,6 +1,5 @@
 package com.example.campusstylistcomposed.ui.screens
 
-
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -26,7 +25,7 @@ import com.example.campusstylistcomposed.ui.viewmodel.SignUpViewModel
 @Composable
 fun SignUpScreen(
     onNavigateToLogin: () -> Unit,
-    onSignupSuccess: (String, Boolean) -> Unit
+    onSignupSuccess: (String, Boolean, Long?) -> Unit
 ) {
     val viewModel: SignUpViewModel = viewModel()
     var username by remember { mutableStateOf("") }
@@ -115,7 +114,7 @@ fun SignUpScreen(
 
             TextField(
                 value = username,
-                onValueChange = { username = it; viewModel.updateUsername(it) },
+                onValueChange = { username = it; viewModel.updateEmail(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),

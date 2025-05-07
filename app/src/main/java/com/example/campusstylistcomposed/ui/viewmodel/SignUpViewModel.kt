@@ -2,17 +2,17 @@ package com.example.campusstylistcomposed.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.campusstylistcomposed.network.ApiService
-import com.example.campusstylistcomposed.network.RetrofitClient
-import com.example.campusstylistcomposed.network.SignUpRequest
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class SignUpViewModel(private val apiService: ApiService = RetrofitClient.apiService) : ViewModel() {
-    private val _username = MutableStateFlow("")
-    val username: StateFlow<String> = _username.asStateFlow()
+@HiltViewModel
+class SignUpViewModel @Inject constructor() : ViewModel() {
+    private val _email = MutableStateFlow("")
+    val email: StateFlow<String> = _email.asStateFlow()
 
     private val _password = MutableStateFlow("")
     val password: StateFlow<String> = _password.asStateFlow()
@@ -26,20 +26,28 @@ class SignUpViewModel(private val apiService: ApiService = RetrofitClient.apiSer
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    fun updateUsername(value: String) { _username.value = value }
+    private val _userId = MutableStateFlow<Long?>(null)
+    val userId: StateFlow<Long?> = _userId.asStateFlow()
+
+    fun updateEmail(value: String) { _email.value = value }
     fun updatePassword(value: String) { _password.value = value }
     fun setRole(isHairdresser: Boolean) { _isHairdresser.value = isHairdresser }
 
-    fun signUp(onSuccess: (String, Boolean) -> Unit) {
+    fun signUp(onSuccess: (String, Boolean, Long?) -> Unit) {
         viewModelScope.launch {
             _isLoading.value = true
+            _errorMessage.value = null
+
             try {
-                val role = if (_isHairdresser.value) "HAIRDRESSER" else "CLIENT"
-                val response = apiService.signUp(SignUpRequest(_username.value, _password.value, role))
-                val isHairdresser = response.role.uppercase() == "HAIRDRESSER"
-                onSuccess(response.token, isHairdresser)
+                // Mock signup response
+                val role = if (_isHairdresser.value) "HAIRSTYLIST" else "STUDENT"
+                val userId = System.currentTimeMillis() // Mock user ID
+                val hasCreatedProfile = false // Navigate to createProfile screen
+
+                _userId.value = userId
+                onSuccess(role, hasCreatedProfile, userId)
             } catch (e: Exception) {
-                _errorMessage.value = "Signup failed: ${e.message}"
+                _errorMessage.value = "Mock signup failed: ${e.message}"
             } finally {
                 _isLoading.value = false
             }

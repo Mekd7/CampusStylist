@@ -75,31 +75,31 @@ fun HairDresserHomePage(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { /* TODO: Nav Action 1 */ }) {
+            IconButton(onClick = { /* Already on Home screen */ }) {
                 Image(
                     painter = painterResource(id = R.drawable.nav_icon_1),
-                    contentDescription = "Nav Icon 1",
+                    contentDescription = "Home",
                     modifier = Modifier.size(24.dp)
                 )
             }
-            IconButton(onClick = { /* TODO: Nav Action 2 */ }) {
+            IconButton(onClick = { viewModel.navigateToAddPost { /* Navigate to addPost */ } }) {
                 Image(
                     painter = painterResource(id = R.drawable.nav_icon_2),
-                    contentDescription = "Nav Icon 2",
+                    contentDescription = "Add Post",
                     modifier = Modifier.size(24.dp)
                 )
             }
             IconButton(onClick = { viewModel.navigateToManageSchedule(onManageScheduleClick) }) {
                 Image(
                     painter = painterResource(id = R.drawable.nav_icon_3),
-                    contentDescription = "Nav Icon 3",
+                    contentDescription = "Manage Schedule",
                     modifier = Modifier.size(24.dp)
                 )
             }
             IconButton(onClick = { viewModel.logout(onLogout) }) {
                 Image(
                     painter = painterResource(id = R.drawable.nav_icon_4),
-                    contentDescription = "Nav Icon 4",
+                    contentDescription = "Logout",
                     modifier = Modifier.size(24.dp)
                 )
             }

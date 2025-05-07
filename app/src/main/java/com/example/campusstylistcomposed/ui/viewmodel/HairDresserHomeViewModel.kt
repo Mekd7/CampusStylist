@@ -1,4 +1,3 @@
-
 package com.example.campusstylistcomposed.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
@@ -40,6 +39,10 @@ class HairDresserHomeViewModel : ViewModel() {
     }
 
     fun navigateToManageSchedule(onNavigate: () -> Unit) {
+        onNavigate()
+    }
+
+    fun navigateToAddPost(onNavigate: () -> Unit) {
         onNavigate()
     }
 }
