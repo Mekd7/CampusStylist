@@ -1,6 +1,5 @@
 package com.example.campusstylistcomposed.ui.screens
 
-
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -29,7 +28,7 @@ fun LoginScreen(
     onLoginSuccess: (String, Boolean) -> Unit
 ) {
     val viewModel: LoginViewModel = viewModel()
-    var username by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val errorMessage by viewModel.errorMessage.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -102,7 +101,7 @@ fun LoginScreen(
             )
 
             Text(
-                text = "Username",
+                text = "Email",
                 style = TextStyle(
                     color = Color.White,
                     fontSize = 18.sp
@@ -113,8 +112,8 @@ fun LoginScreen(
             )
 
             TextField(
-                value = username,
-                onValueChange = { username = it; viewModel.updateUsername(it) },
+                value = email,
+                onValueChange = { email = it; viewModel.updateEmail(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -129,7 +128,7 @@ fun LoginScreen(
                     unfocusedIndicatorColor = Color.Transparent
                 ),
                 shape = RoundedCornerShape(50),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
 
             Spacer(modifier = Modifier.height(16.dp))

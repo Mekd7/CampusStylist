@@ -18,6 +18,12 @@ class RequestService(private val requestRepository: RequestRepository) {
         }
     }
 
+    fun getById(id: Long): Request? {
+        return transaction {
+            requestRepository.findById(id)
+        }
+    }
+
     fun decline(id: Long): Boolean {
         return transaction {
             requestRepository.decline(id)

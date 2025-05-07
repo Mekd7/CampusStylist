@@ -1,34 +1,82 @@
 package com.example.campusstylist.backend.application.controller
 
-import com.example.campusstylist.backend.domain.model.User
+import com.example.campusstylist.backend.data.AuthRequest
+import com.example.campusstylist.backend.data.AuthResponse
 import com.example.campusstylist.backend.domain.service.UserService
-import com.example.campusstylist.backend.infrastructure.security.JwtConfig
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.serialization.SerializationException
+import org.slf4j.LoggerFactory
+import java.sql.SQLException
 
 fun Route.authRoutes(userService: UserService) {
+    val logger = LoggerFactory.getLogger("AuthRoutes")
+
     route("/auth") {
         post("/register") {
-            val user = call.receive<User>()
             try {
-                val createdUser = userService.signup(user.email, user.password, user.role.toString())
-                call.respond(HttpStatusCode.Created, createdUser)
+                val request = call.receive<AuthRequest>()
+                logger.debug("Received register request: $request")
+
+                // Validate role
+                if (request.role.uppercase() !in listOf("CLIENT", "HAIRDRESSER")) {
+                    logger.warn("Invalid role: ${request.role}")
+                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid role", "message" to "Role must be CLIENT or HAIRDRESSER"))
+                    return@post
+                }
+                // Validate email and password
+                if (request.email.isBlank() || request.password.isBlank()) {
+                    logger.warn("Empty email or password: email=${request.email}")
+                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid input", "message" to "Email and password are required"))
+                    return@post
+                }
+                val response = userService.signup(request.email, request.password, request.role.uppercase())
+                call.respond(HttpStatusCode.Created, response)
+            } catch (e: SerializationException) {
+                logger.error("Serialization error: ${e.message}", e)
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid JSON", "message" to e.message))
             } catch (e: IllegalArgumentException) {
-                call.respond(HttpStatusCode.Conflict, "Email already exists")
+                logger.warn("Signup failed: ${e.message}")
+                call.respond(HttpStatusCode.Conflict, mapOf("error" to "Conflict", "message" to (e.message ?: "Email already exists")))
+            } catch (e: SQLException) {
+                logger.error("Database error: ${e.message}", e)
+                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Database error", "message" to e.message))
+            } catch (e: Exception) {
+                logger.error("Unexpected error: ${e.message}", e)
+                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Server error", "message" to e.message))
             }
         }
 
         post("/login") {
-            val user = call.receive<User>()
-            val foundUser = userService.signin(user.email, user.password)
-            if (foundUser != null) {
-                val token = JwtConfig.generateToken(user.email)
-                call.respond(mapOf("token" to token, "role" to foundUser.role.toString(), "hasCreatedProfile" to foundUser.hasCreatedProfile))
-            } else {
-                call.respond(HttpStatusCode.Unauthorized, "Invalid credentials")
+            try {
+                val request = call.receive<AuthRequest>()
+                logger.debug("Received login request: email=${request.email}")
+
+                // Validate email and password
+                if (request.email.isBlank() || request.password.isBlank()) {
+                    logger.warn("Empty email or password: email=${request.email}")
+                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid input", "message" to "Email and password are required"))
+                    return@post
+                }
+                val response = userService.signin(request.email, request.password)
+                if (response != null) {
+                    call.respond(HttpStatusCode.OK, response)
+                } else {
+                    logger.warn("Invalid credentials for email: ${request.email}")
+                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Unauthorized", "message" to "Invalid credentials"))
+                }
+            } catch (e: SerializationException) {
+                logger.error("Serialization error: ${e.message}", e)
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid JSON", "message" to e.message))
+            } catch (e: SQLException) {
+                logger.error("Database error: ${e.message}", e)
+                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Database error", "message" to e.message))
+            } catch (e: Exception) {
+                logger.error("Unexpected error: ${e.message}", e)
+                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Server error", "message" to e.message))
             }
         }
     }

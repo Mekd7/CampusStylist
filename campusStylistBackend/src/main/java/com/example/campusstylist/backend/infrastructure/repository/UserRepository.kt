@@ -5,20 +5,30 @@ import com.example.campusstylist.backend.infrastructure.table.Users
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.slf4j.LoggerFactory
+import org.postgresql.util.PSQLException
 
 class UserRepository {
+    private val logger = LoggerFactory.getLogger(UserRepository::class.java)
+
     fun create(user: User): User = transaction {
-        val id = Users.insert {
-            it[username] = user.username // Can be null
-            it[password] = user.password
-            it[role] = user.role
-            it[profilePicture] = user.profilePicture
-            it[bio] = user.bio
-            it[name] = user.name
-            it[hasCreatedProfile] = user.hasCreatedProfile
-            it[Users.email] = user.email
-        } get Users.id
-        user.copy(id = id)
+        try {
+            val id = Users.insert {
+                it[email] = user.email
+                it[username] = user.username
+                it[password] = user.password
+                it[role] = user.role
+                it[profilePicture] = user.profilePicture
+                it[bio] = user.bio
+                it[name] = user.name
+                it[hasCreatedProfile] = user.hasCreatedProfile
+            } get Users.id
+            logger.debug("Created user with id=$id, email=${user.email}")
+            user.copy(id = id)
+        } catch (e: PSQLException) {
+            logger.error("Failed to create user: ${e.message}", e)
+            throw IllegalStateException("Database error: ${e.message}", e)
+        }
     }
 
     fun findById(id: Long): User? = transaction {
@@ -59,18 +69,30 @@ class UserRepository {
 
     fun update(user: User): Boolean = transaction {
         user.id?.let {
-            Users.update({ Users.id eq it }) {
-                it[username] = user.username // Add username update
-                it[profilePicture] = user.profilePicture
-                it[bio] = user.bio
-                it[name] = user.name
-                it[hasCreatedProfile] = user.hasCreatedProfile
-                it[Users.email] = user.email
-            } > 0
+            try {
+                Users.update({ Users.id eq it }) {
+                    it[email] = user.email
+                    it[username] = user.username
+                    it[password] = user.password
+                    it[role] = user.role
+                    it[profilePicture] = user.profilePicture
+                    it[bio] = user.bio
+                    it[name] = user.name
+                    it[hasCreatedProfile] = user.hasCreatedProfile
+                } > 0
+            } catch (e: PSQLException) {
+                logger.error("Failed to update user id=$it: ${e.message}", e)
+                throw IllegalStateException("Database error: ${e.message}", e)
+            }
         } ?: false
     }
 
     fun delete(id: Long): Boolean = transaction {
-        Users.deleteWhere { Users.id eq id } > 0
+        try {
+            Users.deleteWhere { Users.id eq id } > 0
+        } catch (e: PSQLException) {
+            logger.error("Failed to delete user id=$id: ${e.message}", e)
+            throw IllegalStateException("Database error: ${e.message}", e)
+        }
     }
 }

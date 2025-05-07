@@ -1,46 +1,73 @@
 package com.example.campusstylist.backend.domain.service
 
+import com.example.campusstylist.backend.data.AuthResponse
 import com.example.campusstylist.backend.domain.model.Role
 import com.example.campusstylist.backend.domain.model.User
 import com.example.campusstylist.backend.infrastructure.repository.UserRepository
+import com.example.campusstylist.backend.infrastructure.security.JwtConfig
 import org.jetbrains.exposed.sql.transactions.transaction
+import org.mindrot.jbcrypt.BCrypt
+import org.slf4j.LoggerFactory
 
 class UserService(private val userRepository: UserRepository) {
+    private val logger = LoggerFactory.getLogger(UserService::class.java)
 
-    fun signup(email: String, password: String, role: String): User {
+    fun signup(email: String, password: String, role: String): AuthResponse {
+        logger.debug("Processing signup: email=$email, role=$role")
         val parsedRole = try {
             Role.valueOf(role.uppercase())
         } catch (e: IllegalArgumentException) {
+            logger.warn("Invalid role: $role")
             throw IllegalArgumentException("Invalid role: $role")
         }
 
         val user = User(
             id = null,
             email = email,
-            username = null, // Username will be set during profile creation
-            password = password,
+            username = null,
+            password = hashPassword(password),
             role = parsedRole,
-            hasCreatedProfile = false // Explicitly set to false
+            profilePicture = null,
+            bio = null,
+            name = null,
+            hasCreatedProfile = false
         )
 
         return transaction {
             userRepository.findByEmail(email)?.let {
+                logger.warn("Email already exists: $email")
                 throw IllegalArgumentException("Email already exists")
             }
-            userRepository.create(user)
+            val createdUser = userRepository.create(user)
+            logger.debug("User created: email=$email, role=${createdUser.role}")
+            AuthResponse(
+                token = JwtConfig.generateToken(createdUser.email),
+                role = createdUser.role.name,
+                hasCreatedProfile = createdUser.hasCreatedProfile
+            )
         }
     }
 
-    fun signin(email: String, password: String): User? {
+    fun signin(email: String, password: String): AuthResponse? {
+        logger.debug("Processing signin: email=$email")
         val user = transaction {
             userRepository.findByEmail(email)
-        } ?: return null
-
-        if (user.password != password) { // In a real app, use password hashing
+        } ?: run {
+            logger.warn("User not found: email=$email")
             return null
         }
 
-        return user
+        if (!verifyPassword(password, user.password)) {
+            logger.warn("Invalid password for email: $email")
+            return null
+        }
+
+        logger.debug("Signin successful: email=$email, role=${user.role}")
+        return AuthResponse(
+            token = JwtConfig.generateToken(user.email),
+            role = user.role.name,
+            hasCreatedProfile = user.hasCreatedProfile
+        )
     }
 
     fun findByEmail(email: String): User? {
@@ -51,7 +78,10 @@ class UserService(private val userRepository: UserRepository) {
 
     fun update(user: User): Boolean {
         return transaction {
-            userRepository.update(user)
+            val updatedUser = user.copy(
+                password = if (user.password != findByEmail(user.email)?.password) hashPassword(user.password) else user.password
+            )
+            userRepository.update(updatedUser)
         }
     }
 
@@ -59,5 +89,13 @@ class UserService(private val userRepository: UserRepository) {
         return transaction {
             userRepository.delete(id)
         }
+    }
+
+    private fun hashPassword(password: String): String {
+        return BCrypt.hashpw(password, BCrypt.gensalt())
+    }
+
+    private fun verifyPassword(rawPassword: String, hashedPassword: String): Boolean {
+        return BCrypt.checkpw(rawPassword, hashedPassword)
     }
 }

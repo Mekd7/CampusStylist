@@ -1,6 +1,5 @@
 package com.example.campusstylist.backend.domain.model
 
 enum class Role {
-    HAIRSTYLIST,
-    STUDENT
+    CLIENT, HAIRDRESSER
 }

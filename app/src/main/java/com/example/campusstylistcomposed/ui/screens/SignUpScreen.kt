@@ -28,7 +28,7 @@ fun SignUpScreen(
     onSignupSuccess: (String, Boolean, Long?) -> Unit
 ) {
     val viewModel: SignUpViewModel = viewModel()
-    var username by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val selectedRole by viewModel.isHairdresser.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
@@ -102,7 +102,7 @@ fun SignUpScreen(
             )
 
             Text(
-                text = "Username",
+                text = "Email",
                 style = TextStyle(
                     color = Color.White,
                     fontSize = 18.sp
@@ -113,8 +113,8 @@ fun SignUpScreen(
             )
 
             TextField(
-                value = username,
-                onValueChange = { username = it; viewModel.updateEmail(it) },
+                value = email,
+                onValueChange = { email = it; viewModel.updateEmail(it) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -129,7 +129,7 @@ fun SignUpScreen(
                     unfocusedIndicatorColor = Color.Transparent
                 ),
                 shape = RoundedCornerShape(50),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -229,7 +229,7 @@ fun SignUpScreen(
             } else {
                 Button(
                     onClick = { viewModel.signUp(onSignupSuccess) },
-                    enabled = username.isNotBlank() && password.isNotBlank(),
+                    enabled = email.isNotBlank() && password.isNotBlank(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
