@@ -17,9 +17,10 @@ class UserService(private val userRepository: UserRepository) {
         val user = User(
             id = null,
             email = email,
-            username = email.split("@")[0],
+            username = null, // Username will be set during profile creation
             password = password,
-            role = parsedRole
+            role = parsedRole,
+            hasCreatedProfile = false // Explicitly set to false
         )
 
         return transaction {

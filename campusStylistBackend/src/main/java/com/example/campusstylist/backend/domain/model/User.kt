@@ -5,14 +5,14 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class User(
     val id: Long? = null,
-    val username: String,
+    val email: String,
+    val username: String? = null, // Nullable, set during profile creation
     val password: String,
     val role: Role,
     val profilePicture: String? = null,
     val bio: String? = null,
     val name: String? = null,
-    val hasCreatedProfile: Boolean = false,
-    val email: String
+    val hasCreatedProfile: Boolean = false
 )
 
 //enum class Role {

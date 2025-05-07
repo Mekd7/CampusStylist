@@ -6,7 +6,7 @@ import org.jetbrains.exposed.sql.Table
 object Users : Table() {
     val id = long("id").autoIncrement()
     val email = varchar("email", 255).uniqueIndex() // Added email as unique identifier
-    val username = varchar("username", 255) // Removed uniqueIndex since email is the identifier
+    val username = varchar("username", 255).nullable() // Removed uniqueIndex since email is the identifier
     val password = varchar("password", 255)
     val role = enumeration("role", Role::class)
     val profilePicture = text("profile_picture").nullable()
