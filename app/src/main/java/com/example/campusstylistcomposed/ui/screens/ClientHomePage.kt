@@ -7,12 +7,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
@@ -26,7 +20,10 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.campusstylistcomposed.ui.components.Footer
+import com.example.campusstylistcomposed.ui.components.FooterType
 import com.example.campusstylistcomposed.ui.viewmodel.ClientHomeViewModel
 import com.example.campusstylistcomposed.ui.viewmodel.Stylist
 import com.example.campusstylistcomposed.R
@@ -35,9 +32,9 @@ import com.example.campusstylistcomposed.R
 fun ClientHomePage(
     token: String,
     onLogout: () -> Unit,
-    onAddPostClick: (String) -> Unit,
-    onEditProfileClick: (String) -> Unit,
-    onAddBookingClick: (String) -> Unit,
+    onHomeClick: () -> Unit,
+    onOrdersClick: () -> Unit,
+    onProfileClick: () -> Unit,
     viewModel: ClientHomeViewModel = viewModel()
 ) {
     LaunchedEffect(token) {
@@ -74,49 +71,14 @@ fun ClientHomePage(
             Spacer(modifier = Modifier.height(60.dp))
         }
 
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                .background(Color(0xFFE0136C))
-                .padding(vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = { /* Already on Home screen */ }) {
-                Icon(
-                    imageVector = Icons.Default.Home,
-                    contentDescription = "Home",
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            IconButton(onClick = { viewModel.navigateToAddBooking(onAddBookingClick) }) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add Booking",
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            IconButton(onClick = { viewModel.navigateToEditProfile(onEditProfileClick) }) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Profile",
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            IconButton(onClick = { viewModel.logout(onLogout) }) {
-                Icon(
-                    painter = painterResource(id = android.R.drawable.ic_menu_close_clear_cancel),
-                    contentDescription = "Logout",
-                    tint = Color.White,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
+        Footer(
+            footerType = FooterType.CLIENT,
+            onHomeClick = onHomeClick,
+            onSecondaryClick = onOrdersClick,
+            onTertiaryClick = onProfileClick,
+            onProfileClick = {}, // Not used for Client
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -176,4 +138,21 @@ fun StylistCard(stylist: Stylist) {
             )
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ClientHomePagePreview() {
+    val viewModel = ClientHomeViewModel().apply {
+        setToken("mock_token")
+    }
+
+    ClientHomePage(
+        token = "mock_token",
+        onLogout = {},
+        onHomeClick = {},
+        onOrdersClick = {},
+        onProfileClick = {},
+        viewModel = viewModel
+    )
 }

@@ -1,4 +1,3 @@
-
 package com.example.campusstylistcomposed.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
@@ -22,7 +21,6 @@ class HairDresserHomeViewModel : ViewModel() {
     val posts: StateFlow<List<Post>> = _posts.asStateFlow()
 
     init {
-        // Mock some post data
         _posts.value = listOf(
             Post("You", R.drawable.hair_style),
             Post("You", R.drawable.hair_style),
@@ -39,7 +37,23 @@ class HairDresserHomeViewModel : ViewModel() {
         onLogout()
     }
 
-    fun navigateToManageSchedule(onNavigate: () -> Unit) {
+    fun navigateToHome(onHomeClick: () -> Unit) {
+        onHomeClick()
+    }
+
+    fun navigateToRequests(onRequestsClick: () -> Unit) {
+        onRequestsClick()
+    }
+
+    fun navigateToSchedule(onScheduleClick: () -> Unit) {
+        onScheduleClick()
+    }
+
+    fun navigateToProfile(onProfileClick: () -> Unit) {
+        onProfileClick()
+    }
+
+    fun navigateToAddPost(onNavigate: () -> Unit) {
         onNavigate()
     }
 }
