@@ -6,19 +6,15 @@ import org.jetbrains.exposed.sql.transactions.transaction
 
 class BookingService(private val bookingRepository: BookingRepository) {
 
-    fun create(booking: Booking): Booking {
+    fun create(booking: Booking): Booking? {
         return transaction {
-            try {
-                bookingRepository.create(booking)
-            } catch (e: Exception) {
-                throw IllegalStateException("Failed to create booking: ${e.message}", e)
-            }
+            bookingRepository.create(booking)
         }
     }
 
-    fun getByUserId(userId: Long, isHairdresser: Boolean): List<Booking> {
+    fun getByUserId(userId: Long, isHairstylist: Boolean): List<Booking> {
         return transaction {
-            bookingRepository.findByUserId(userId, isHairdresser)
+            bookingRepository.findByUserId(userId, isHairstylist)
         }
     }
 

@@ -3,9 +3,8 @@ package com.example.campusstylist.backend.infrastructure.repository
 import com.example.campusstylist.backend.domain.model.Post
 import com.example.campusstylist.backend.infrastructure.table.Posts
 import org.jetbrains.exposed.sql.*
+//import org.jetbrains.exposed.sql.op.Op
 import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-
 
 class PostRepository {
     fun create(post: Post): Post = transaction {
@@ -14,13 +13,13 @@ class PostRepository {
             it[pictureUrl] = post.pictureUrl
             it[description] = post.description
         } get Posts.id
-        post.copy(id = id.value)
+        post.copy(id = id)
     }
 
     fun findAll(): List<Post> = transaction {
         Posts.selectAll().map {
             Post(
-                id = it[Posts.id].value,
+                id = it[Posts.id],
                 userId = it[Posts.userId],
                 pictureUrl = it[Posts.pictureUrl],
                 description = it[Posts.description]
@@ -29,10 +28,10 @@ class PostRepository {
     }
 
     fun findById(id: Long): Post? = transaction {
-        Posts.select { Posts.id eq id }
+        Posts.select { Op.build { Posts.id eq id } }
             .map {
                 Post(
-                    id = it[Posts.id].value,
+                    id = it[Posts.id],
                     userId = it[Posts.userId],
                     pictureUrl = it[Posts.pictureUrl],
                     description = it[Posts.description]
@@ -43,7 +42,7 @@ class PostRepository {
 
     fun update(post: Post): Boolean = transaction {
         post.id?.let {
-            Posts.update({ Posts.id eq it }) {
+            Posts.update({ Op.build { Posts.id eq it } }) {
                 it[pictureUrl] = post.pictureUrl
                 it[description] = post.description
             } > 0
@@ -51,6 +50,6 @@ class PostRepository {
     }
 
     fun delete(id: Long): Boolean = transaction {
-        Posts.deleteWhere { Posts.id eq id } > 0
+        Posts.deleteWhere { Op.build { Posts.id eq id } } > 0
     }
 }

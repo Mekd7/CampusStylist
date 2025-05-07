@@ -2,6 +2,7 @@ plugins {
     application
     alias(libs.plugins.jetbrains.kotlin.jvm)
     alias(libs.plugins.kotlinx.serialization)
+    id("io.ktor.plugin") version "2.3.12"
 }
 
 application {
@@ -9,6 +10,8 @@ application {
 }
 
 dependencies {
+    implementation("org.mindrot:jbcrypt:0.4")
+    implementation("io.ktor:ktor-server-status-pages:2.3.12")
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.content.negotiation)
