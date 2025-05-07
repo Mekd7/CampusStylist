@@ -7,7 +7,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
@@ -20,7 +19,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.campusstylistcomposed.ui.components.Footer
+import com.example.campusstylistcomposed.ui.components.FooterType
 import com.example.campusstylistcomposed.ui.viewmodel.HairDresserHomeViewModel
 import com.example.campusstylistcomposed.ui.viewmodel.Post
 import com.example.campusstylistcomposed.R
@@ -29,7 +31,10 @@ import com.example.campusstylistcomposed.R
 fun HairDresserHomePage(
     token: String,
     onLogout: () -> Unit,
-    onManageScheduleClick: () -> Unit,
+    onHomeClick: () -> Unit,
+    onRequestsClick: () -> Unit,
+    onScheduleClick: () -> Unit,
+    onProfileClick: () -> Unit,
     viewModel: HairDresserHomeViewModel = viewModel()
 ) {
     LaunchedEffect(token) {
@@ -65,45 +70,14 @@ fun HairDresserHomePage(
             Spacer(modifier = Modifier.height(60.dp))
         }
 
-        Row(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                .background(Color(0xFFE0136C))
-                .padding(vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(onClick = { /* Already on Home screen */ }) {
-                Image(
-                    painter = painterResource(id = R.drawable.nav_icon_1),
-                    contentDescription = "Home",
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            IconButton(onClick = { viewModel.navigateToAddPost { /* Navigate to addPost */ } }) {
-                Image(
-                    painter = painterResource(id = R.drawable.nav_icon_2),
-                    contentDescription = "Add Post",
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            IconButton(onClick = { viewModel.navigateToManageSchedule(onManageScheduleClick) }) {
-                Image(
-                    painter = painterResource(id = R.drawable.nav_icon_3),
-                    contentDescription = "Manage Schedule",
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            IconButton(onClick = { viewModel.logout(onLogout) }) {
-                Image(
-                    painter = painterResource(id = R.drawable.nav_icon_4),
-                    contentDescription = "Logout",
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
+        Footer(
+            footerType = FooterType.HAIRDRESSER,
+            onHomeClick = onHomeClick,
+            onSecondaryClick = onRequestsClick,
+            onTertiaryClick = onScheduleClick,
+            onProfileClick = onProfileClick,
+            modifier = Modifier.align(Alignment.BottomCenter)
+        )
     }
 }
 
@@ -164,4 +138,22 @@ fun StylistCardFigma(post: Post) {
             )
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HairDresserHomePagePreview() {
+    val viewModel = HairDresserHomeViewModel().apply {
+        setToken("mock_token")
+    }
+
+    HairDresserHomePage(
+        token = "mock_token",
+        onLogout = {},
+        onHomeClick = {},
+        onRequestsClick = {},
+        onScheduleClick = {},
+        onProfileClick = {},
+        viewModel = viewModel
+    )
 }

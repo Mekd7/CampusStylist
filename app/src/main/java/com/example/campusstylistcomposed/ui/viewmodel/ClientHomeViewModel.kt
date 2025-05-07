@@ -8,7 +8,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.example.campusstylistcomposed.R
 
-
 data class Stylist(
     val name: String,
     val imageResId: Int
@@ -22,7 +21,6 @@ class ClientHomeViewModel : ViewModel() {
     val stylists: StateFlow<List<Stylist>> = _stylists.asStateFlow()
 
     init {
-        // Mock some stylist data
         _stylists.value = listOf(
             Stylist("Stylist 1", R.drawable.campstylist),
             Stylist("Stylist 2", R.drawable.campstylist),
@@ -39,15 +37,15 @@ class ClientHomeViewModel : ViewModel() {
         onLogout()
     }
 
-    fun navigateToAddPost(onAddPostClick: (String) -> Unit) {
-        onAddPostClick(_token.value)
+    fun navigateToHome(onHomeClick: () -> Unit) {
+        onHomeClick()
     }
 
-    fun navigateToEditProfile(onEditProfileClick: (String) -> Unit) {
-        onEditProfileClick(_token.value)
+    fun navigateToOrders(onOrdersClick: () -> Unit) {
+        onOrdersClick()
     }
 
-    fun navigateToAddBooking(onAddBookingClick: (String) -> Unit) {
-        onAddBookingClick(_token.value)
+    fun navigateToProfile(onProfileClick: () -> Unit) {
+        onProfileClick()
     }
 }

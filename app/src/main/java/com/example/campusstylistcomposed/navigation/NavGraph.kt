@@ -9,9 +9,7 @@ import com.example.campusstylistcomposed.ui.screens.ClientHomePage
 import com.example.campusstylistcomposed.ui.screens.CreateProfileScreen
 import com.example.campusstylistcomposed.ui.screens.HairDresserHomePage
 import com.example.campusstylistcomposed.ui.screens.AddBookingScreen
-import com.example.campusstylistcomposed.ui.screens.AddPostScreen
 import com.example.campusstylistcomposed.ui.screens.EditBookingScreen
-import com.example.campusstylistcomposed.ui.screens.EditPostScreen
 import com.example.campusstylistcomposed.ui.screens.LoginScreen
 import com.example.campusstylistcomposed.ui.screens.ManageScheduleScreen
 import com.example.campusstylistcomposed.ui.screens.MyRequestsScreen
@@ -90,9 +88,9 @@ fun SetupNavGraph(navController: NavHostController) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                onAddPostClick = { navController.navigate("addPost/$token") },
-                onEditProfileClick = { navController.navigate("profile/$token") },
-                onAddBookingClick = { navController.navigate("addBooking/$token") },
+                onHomeClick = { /* Already on home */ },
+                onOrdersClick = { navController.navigate("orders/$token") },
+                onProfileClick = { navController.navigate("profile/$token") },
                 viewModel = viewModel()
             )
         }
@@ -108,7 +106,10 @@ fun SetupNavGraph(navController: NavHostController) {
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                onManageScheduleClick = { navController.navigate("manageSchedule/$token") },
+                onHomeClick = { /* Already on home */ },
+                onRequestsClick = { navController.navigate("myRequests/$token") },
+                onScheduleClick = { navController.navigate("manageSchedule/$token") },
+                onProfileClick = { navController.navigate("profile/$token") },
                 viewModel = viewModel()
             )
         }
@@ -127,6 +128,21 @@ fun SetupNavGraph(navController: NavHostController) {
             ManageScheduleScreen(navController)
         }
         composable(
+            "orders/{token}",
+            arguments = listOf(navArgument("token") { defaultValue = "" })
+        ) { backStackEntry ->
+            val token = backStackEntry.arguments?.getString("token") ?: ""
+            // Placeholder for OrdersScreen
+            // OrdersScreen(navController)
+        }
+        composable(
+            "myRequests/{token}",
+            arguments = listOf(navArgument("token") { defaultValue = "" })
+        ) { backStackEntry ->
+            val token = backStackEntry.arguments?.getString("token") ?: ""
+            MyRequestsScreen(navController)
+        }
+        composable(
             "addBooking/{token}",
             arguments = listOf(navArgument("token") { defaultValue = "" })
         ) { backStackEntry ->
@@ -136,28 +152,8 @@ fun SetupNavGraph(navController: NavHostController) {
                 onBackClick = { navController.popBackStack() }
             )
         }
-        composable(
-            "addPost/{token}",
-            arguments = listOf(navArgument("token") { defaultValue = "" })
-        ) { backStackEntry ->
-            val token = backStackEntry.arguments?.getString("token") ?: ""
-            AddPostScreen(
-                navController = navController,
-                onBackClick = { navController.popBackStack() },
-                onPostSuccess = { navController.popBackStack() }
-            )
-        }
-        composable("myRequests") {
-            MyRequestsScreen(navController)
-        }
         composable("editBooking") {
             EditBookingScreen(
-                navController = navController,
-                onBackClick = { navController.popBackStack() }
-            )
-        }
-        composable("editPost") {
-            EditPostScreen(
                 navController = navController,
                 onBackClick = { navController.popBackStack() }
             )
