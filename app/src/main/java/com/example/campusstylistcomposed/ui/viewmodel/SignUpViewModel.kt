@@ -34,9 +34,9 @@ class SignUpViewModel(private val apiService: ApiService = RetrofitClient.apiSer
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                val role = if (_isHairdresser.value) "HAIRDRESSER" else "CLIENT"
+                val role = if (_isHairdresser.value) "HAIRSTYLIST" else "STUDENT"
                 val response = apiService.signUp(SignUpRequest(_username.value, _password.value, role))
-                val isHairdresser = response.role.uppercase() == "HAIRDRESSER"
+                val isHairdresser = response.role.uppercase() == "HAIRSTYLIST"
                 onSuccess(response.token, isHairdresser)
             } catch (e: Exception) {
                 _errorMessage.value = "Signup failed: ${e.message}"

@@ -32,7 +32,7 @@ class LoginViewModel(private val apiService: ApiService = RetrofitClient.apiServ
             _isLoading.value = true
             try {
                 val response = apiService.login(LoginRequest(_username.value, _password.value))
-                val isHairdresser = response.role.uppercase() == "HAIRDRESSER"
+                val isHairdresser = response.role.uppercase() == "HAIRSTYLIST"
                 onSuccess(response.token, isHairdresser)
             } catch (e: Exception) {
                 _errorMessage.value = "Login failed: ${e.message}"

@@ -5,24 +5,25 @@ import retrofit2.http.Body
 import retrofit2.http.POST
 
 data class LoginRequest(
-    val username: String,
-    val password: String
+    @SerializedName("email") val email: String,
+    @SerializedName("password") val password: String,
+    @SerializedName("role") val role: String
 )
 
 data class LoginResponse(
-    val token: String,
+    @SerializedName("token") val token: String,
     @SerializedName("role") val role: String,
     @SerializedName("hasCreatedProfile") val hasCreatedProfile: Boolean
 )
 
 data class SignUpRequest(
-    val username: String,
-    val password: String,
-    val role: String
+    @SerializedName("email") val email: String,
+    @SerializedName("password") val password: String,
+    @SerializedName("role") val role: String
 )
 
 data class SignUpResponse(
-    val token: String,
+    @SerializedName("token") val token: String,
     @SerializedName("role") val role: String,
     @SerializedName("hasCreatedProfile") val hasCreatedProfile: Boolean
 )
