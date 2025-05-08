@@ -7,8 +7,8 @@ import io.ktor.server.auth.jwt.*
 import java.util.*
 
 object JwtConfig {
-    private const val SECRET = "your-secret-key" // Replace with a secure key
-    private const val ISSUER = "campusstylist"
+    private const val SECRET = "mySuperSecretKey1234567890abcdef" // Use a secure key (load from env in production)
+    private const val ISSUER = "http://localhost:8080/" // Updated to match common API URL format
     private const val VALIDITY = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
 
     fun configureJwt(): AuthenticationConfig.() -> Unit = {
