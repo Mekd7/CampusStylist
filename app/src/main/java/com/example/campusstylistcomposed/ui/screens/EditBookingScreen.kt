@@ -12,7 +12,7 @@ import com.example.campusstylistcomposed.ui.viewmodel.EditBookingViewModel
 
 @Composable
 fun EditBookingScreen(
-    navController: NavHostController,
+    navController: (String) -> Unit, // Change to lambda type
     onBackClick: () -> Unit,
     viewModel: EditBookingViewModel = viewModel()
 ) {
@@ -43,10 +43,10 @@ fun EditBookingScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Button(onClick = { onBackClick(); navController.popBackStack() }) {
+            Button(onClick = { onBackClick(); navController("popBackStack") }) { // Use lambda to navigate
                 Text("Back")
             }
-            Button(onClick = { navController.popBackStack() }) {
+            Button(onClick = { navController("popBackStack") }) { // Use lambda to navigate
                 Text("Save")
             }
         }

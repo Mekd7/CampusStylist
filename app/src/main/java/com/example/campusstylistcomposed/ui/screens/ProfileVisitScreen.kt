@@ -31,7 +31,8 @@ fun ProfileVisitScreen(
     onHomeClick: () -> Unit,
     onOrdersClick: () -> Unit,
     onProfileClick: () -> Unit,
-    onBookClick: () -> Unit
+    onBookClick: () -> Unit,
+    navController: (String) -> Unit // Change to lambda type
 ) {
     // Colors from Figma (using provided globalVars)
     val darkBackgroundColor = Color(0xFF222020)

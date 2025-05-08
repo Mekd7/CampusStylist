@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.navigation.NavHostController
 import com.example.campusstylistcomposed.R
 
 @Composable
@@ -24,7 +23,7 @@ fun EditProfile(
     token: String,
     onSaveChanges: (String, String) -> Unit,
     onBackClick: () -> Unit,
-    navController: NavHostController
+    navController: (String) -> Unit // Change to lambda type to match NavGraph
 ) {
     var name by remember { mutableStateOf("Ashley Gram") }
     var bio by remember { mutableStateOf("Hair is my passion\nLocated At AAiT,\ndorm room 306\nBook Now !!!") }
@@ -130,7 +129,10 @@ fun EditProfile(
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
-            onClick = { onSaveChanges(name, bio); navController.popBackStack() },
+            onClick = {
+                onSaveChanges(name, bio)
+                onBackClick() // Use onBackClick to go back
+            },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE0136C)),
             modifier = Modifier
                 .fillMaxWidth()
@@ -145,4 +147,3 @@ fun EditProfile(
         }
     }
 }
-

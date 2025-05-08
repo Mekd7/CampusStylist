@@ -42,7 +42,7 @@ fun ManageScheduleScreen(
     onRequestsClick: () -> Unit,
     onScheduleClick: () -> Unit,
     onProfileClick: () -> Unit,
-    navController: NavHostController,
+    navController: (String) -> Unit, // Change to lambda type
     viewModel: ManageScheduleViewModel = viewModel()
 ) {
     // Colors matching the BookingScreen
@@ -94,13 +94,13 @@ fun ManageScheduleScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Button(
-                    onClick = { navController.navigate("addBooking/$token") },
+                    onClick = { navController("addBooking/$token") }, // Use lambda to navigate
                     colors = ButtonDefaults.buttonColors(containerColor = pinkColor)
                 ) {
                     Text("Add Booking", color = whiteColor)
                 }
                 Button(
-                    onClick = { navController.navigate("editBooking/$token") },
+                    onClick = { navController("editBooking/$token") }, // Use lambda to navigate
                     colors = ButtonDefaults.buttonColors(containerColor = pinkColor)
                 ) {
                     Text("Edit Schedule", color = whiteColor)
@@ -181,22 +181,3 @@ fun AppointmentCard(appointment: Appointment) {
         }
     }
 }
-
-//@Preview(showBackground = true)
-//@Composable
-//fun ManageScheduleScreenPreview() {
-//    val viewModel = ManageScheduleViewModel().apply {
-//        onDateSelected(Date()) // Ensure mock data is loaded
-//    }
-//
-//    ManageScheduleScreen(
-//        token = "mock_token",
-//        onLogout = { /* Mock logout */ },
-//        onHomeClick = { /* Mock home click */ },
-//        onRequestsClick = { /* Mock requests click */ },
-//        onScheduleClick = { /* Mock schedule click */ },
-//        onProfileClick = { /* Mock profile click */ },
-//        navController = navController, // Add mock NavController for preview
-//        viewModel = viewModel
-//    )
-//}

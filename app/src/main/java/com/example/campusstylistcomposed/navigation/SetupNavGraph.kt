@@ -22,6 +22,7 @@ import com.example.campusstylistcomposed.ui.screens.SignUpScreen
 import com.example.campusstylistcomposed.ui.screens.ProfileVisitScreen
 import com.example.campusstylistcomposed.ui.screens.PostDetailScreen
 import com.example.campusstylistcomposed.ui.screens.EditProfile
+import com.example.campusstylistcomposed.ui.screens.AddPostScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.campusstylistcomposed.ui.viewmodel.ClientHomeViewModel
 import com.example.campusstylistcomposed.ui.viewmodel.HairDresserHomeViewModel
@@ -54,13 +55,15 @@ fun SetupNavGraph(navController: NavHostController) {
                 onNavigateToLogin = { navController.navigate("login") },
                 onSignupSuccess = { role, hasCreatedProfile, userId ->
                     val isHairdresser = role.uppercase() == "HAIRSTYLIST"
-                    if (hasCreatedProfile && isHairdresser) {
-                        navController.navigate("hairdresserHome/$userId") {
-                            popUpTo("signup") { inclusive = true }
-                        }
-                    } else if (hasCreatedProfile) {
-                        navController.navigate("clientHome/$userId") {
-                            popUpTo("signup") { inclusive = true }
+                    if (hasCreatedProfile) {
+                        if (isHairdresser) {
+                            navController.navigate("hairdresserProfile/$userId/$userId") {
+                                popUpTo("signup") { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate("clientHome/$userId") {
+                                popUpTo("signup") { inclusive = true }
+                            }
                         }
                     } else {
                         navController.navigate("createProfile/$userId/$isHairdresser") {
@@ -84,7 +87,7 @@ fun SetupNavGraph(navController: NavHostController) {
                 isHairdresser = isHairdresser,
                 onProfileCreated = {
                     if (isHairdresser) {
-                        navController.navigate("hairdresserHome/$token") {
+                        navController.navigate("hairdresserProfile/$token/$token") {
                             popUpTo("createProfile/{token}/{isHairdresser}") { inclusive = true }
                         }
                     } else {
@@ -134,7 +137,7 @@ fun SetupNavGraph(navController: NavHostController) {
                 onHomeClick = { /* Already on home */ },
                 onRequestsClick = { navController.navigate("myRequests/$token") },
                 onScheduleClick = { navController.navigate("manageSchedule/$token") },
-                onProfileClick = { navController.navigate("hairdresserProfile/$token/$token") },
+                onProfileClick = { navController.navigate("hairdresserProfile/$token/$token") }, // Navigate to profile on profile icon click
                 viewModel = hairDresserHomeViewModel
             )
         }
@@ -150,19 +153,22 @@ fun SetupNavGraph(navController: NavHostController) {
             HairDresserProfileScreen(
                 token = token,
                 hairdresserId = hairdresserId,
-                isOwnProfile = token == hairdresserId,
                 onLogout = {
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                onHomeClick = { navController.navigate("clientHome/$token") },
-                onOrdersClick = { navController.navigate("orders/$token") },
-                onProfileClick = { navController.navigate("clientProfile/$token") },
+                onHomeClick = { navController.navigate("hairdresserHome/$token") },
+                onOrdersClick = { navController.navigate("myRequests/$token") },
+                onProfileClick = { /* Already on profile */ },
                 onPostClick = { post ->
-                    navController.navigate("hairdresserPostDetail/$token/$hairdresserId/${post.imageId}/${post.serviceName}/${post.length}/${post.duration}")
+                    val encodedServiceName = URLEncoder.encode(post.serviceName, "UTF-8")
+                    val encodedLength = URLEncoder.encode(post.length, "UTF-8")
+                    val encodedDuration = URLEncoder.encode(post.duration, "UTF-8")
+                    navController.navigate("hairdresserPostDetail/$token/$hairdresserId/${post.imageId}/$encodedServiceName/$encodedLength/$encodedDuration")
                 },
-                onBookClick = { navController.navigate("booking/$token") },
+                onBookClick = { /* Not applicable */ },
+                navController = { route -> navController.navigate(route) },
                 viewModel = viewModel()
             )
         }
@@ -180,9 +186,9 @@ fun SetupNavGraph(navController: NavHostController) {
             val token = backStackEntry.arguments?.getString("token") ?: ""
             val hairdresserId = backStackEntry.arguments?.getString("hairdresserId") ?: ""
             val imageId = backStackEntry.arguments?.getString("imageId")?.toIntOrNull() ?: 0
-            val serviceName = backStackEntry.arguments?.getString("serviceName") ?: ""
-            val length = backStackEntry.arguments?.getString("length") ?: ""
-            val duration = backStackEntry.arguments?.getString("duration") ?: ""
+            val serviceName = URLDecoder.decode(backStackEntry.arguments?.getString("serviceName") ?: "", "UTF-8")
+            val length = URLDecoder.decode(backStackEntry.arguments?.getString("length") ?: "", "UTF-8")
+            val duration = URLDecoder.decode(backStackEntry.arguments?.getString("duration") ?: "", "UTF-8")
             HairDresserPostDetailScreen(
                 token = token,
                 hairdresserName = hairdresserId,
@@ -190,9 +196,9 @@ fun SetupNavGraph(navController: NavHostController) {
                 serviceName = serviceName,
                 length = length,
                 duration = duration,
-                onHomeClick = { navController.navigate("clientHome/$token") },
-                onOrdersClick = { navController.navigate("orders/$token") },
-                onProfileClick = { navController.navigate("clientProfile/$token") },
+                onHomeClick = { navController.navigate("hairdresserHome/$token") },
+                onOrdersClick = { navController.navigate("myRequests/$token") },
+                onProfileClick = { navController.navigate("hairdresserProfile/$token/$hairdresserId") },
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -245,7 +251,7 @@ fun SetupNavGraph(navController: NavHostController) {
                 onRequestsClick = { navController.navigate("myRequests/$token") },
                 onScheduleClick = { /* Already on manage schedule */ },
                 onProfileClick = { navController.navigate("hairdresserProfile/$token/$token") },
-                navController = navController,
+                navController = { route -> navController.navigate(route) },
                 viewModel = viewModel<ManageScheduleViewModel>()
             )
         }
@@ -274,7 +280,7 @@ fun SetupNavGraph(navController: NavHostController) {
         ) { backStackEntry ->
             val token = backStackEntry.arguments?.getString("token") ?: ""
             AddBookingScreen(
-                navController = navController,
+                navController = { route -> navController.navigate(route) },
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -284,7 +290,7 @@ fun SetupNavGraph(navController: NavHostController) {
         ) { backStackEntry ->
             val token = backStackEntry.arguments?.getString("token") ?: ""
             EditBookingScreen(
-                navController = navController,
+                navController = { route -> navController.navigate(route) },
                 onBackClick = { navController.popBackStack() }
             )
         }
@@ -301,7 +307,8 @@ fun SetupNavGraph(navController: NavHostController) {
                 onHomeClick = { navController.navigate("clientHome/$token") },
                 onOrdersClick = { navController.navigate("orders/$token") },
                 onProfileClick = { navController.navigate("clientProfile/$token") },
-                onBookClick = { navController.navigate("booking/$token") }
+                onBookClick = { navController.navigate("booking/$token") },
+                navController = { route -> navController.navigate(route) }
             )
         }
         composable(
@@ -351,8 +358,26 @@ fun SetupNavGraph(navController: NavHostController) {
                     navController.popBackStack()
                 },
                 onBackClick = { navController.popBackStack() },
-                navController = navController
+                navController = { route -> navController.navigate(route) }
             )
+        }
+        composable(
+            "addPost/{token}",
+            arguments = listOf(navArgument("token") { defaultValue = "" })
+        ) { backStackEntry ->
+            val token = backStackEntry.arguments?.getString("token") ?: ""
+            AddPostScreen(
+                token = token,
+                onBackClick = { navController.popBackStack() },
+                navController = { route -> navController.navigate(route) }
+            )
+        }
+        composable(
+            "profile/{token}",
+            arguments = listOf(navArgument("token") { defaultValue = "" })
+        ) { backStackEntry ->
+            val token = backStackEntry.arguments?.getString("token") ?: ""
+            // Placeholder screen
         }
     }
 }

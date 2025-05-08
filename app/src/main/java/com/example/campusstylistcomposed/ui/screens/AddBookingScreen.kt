@@ -12,7 +12,7 @@ import com.example.campusstylistcomposed.ui.viewmodel.AddBookingViewModel
 
 @Composable
 fun AddBookingScreen(
-    navController: NavHostController,
+    navController: (String) -> Unit, // Change to lambda type
     onBackClick: () -> Unit,
     viewModel: AddBookingViewModel = viewModel()
 ) {
@@ -46,7 +46,7 @@ fun AddBookingScreen(
             Button(onClick = { onBackClick() }) {
                 Text("Back")
             }
-            Button(onClick = { navController.popBackStack() }) {
+            Button(onClick = { navController("popBackStack") }) { // Use lambda to navigate
                 Text("Save")
             }
         }
