@@ -71,15 +71,15 @@ class UserRepository {
     fun update(user: User): Boolean = transaction {
         user.id?.let {
             try {
-                Users.update({ Users.id eq it }) {
-                    it[email] = user.email
-                    it[username] = user.username
-                    it[password] = user.password
-                    it[role] = user.role.dbValue // Use dbValue for consistent integer storage
-                    it[profilePicture] = user.profilePicture
-                    it[bio] = user.bio
-                    it[name] = user.name
-                    it[hasCreatedProfile] = user.hasCreatedProfile
+                Users.update({ Users.id eq it }) { update ->
+                    if (user.email != null) update[email] = user.email
+                    if (user.username != null) update[username] = user.username
+                    if (user.password != null) update[password] = user.password
+                    if (user.role != null) update[role] = user.role.dbValue
+                    if (user.profilePicture != null) update[profilePicture] = user.profilePicture
+                    if (user.bio != null) update[bio] = user.bio
+                    if (user.name != null) update[name] = user.name
+                    if (user.hasCreatedProfile != null) update[hasCreatedProfile] = user.hasCreatedProfile
                 } > 0
             } catch (e: PSQLException) {
                 logger.error("Failed to update user id=$it: ${e.message}", e)

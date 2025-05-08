@@ -12,9 +12,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.SerializationException
-import java.io.File
 import java.sql.SQLException
-import java.util.*
 
 fun Route.userRoutes(userService: UserService) {
     authenticate("auth-jwt") {
@@ -239,23 +237,3 @@ fun Route.userRoutes(userService: UserService) {
     }
 }
 
-suspend fun handleFileUpload(part: PartData.FileItem): String? {
-    val fileName = part.originalFileName ?: return null
-    val extension = fileName.substringAfterLast(".", "").lowercase()
-    if (extension !in listOf("jpg", "jpeg", "png")) {
-        return null // Only allow specific image types
-    }
-    val uniqueFileName = "${UUID.randomUUID()}.$extension" // Prevent name collisions
-    val fileBytes = part.streamProvider().readBytes()
-    return saveFile(uniqueFileName, fileBytes)
-}
-
-suspend fun saveFile(fileName: String, fileBytes: ByteArray): String {
-    val dir = File("uploads")
-    if (!dir.exists()) {
-        dir.mkdirs()
-    }
-    val file = File(dir, fileName)
-    file.writeBytes(fileBytes)
-    return "/uploads/$fileName" // Return relative URL path
-}
