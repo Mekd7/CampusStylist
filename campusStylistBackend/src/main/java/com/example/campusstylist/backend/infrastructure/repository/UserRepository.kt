@@ -7,6 +7,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
 import org.postgresql.util.PSQLException
+import com.example.campusstylist.backend.domain.model.Role
 
 class UserRepository {
     private val logger = LoggerFactory.getLogger(UserRepository::class.java)
@@ -17,7 +18,7 @@ class UserRepository {
                 it[email] = user.email
                 it[username] = user.username
                 it[password] = user.password
-                it[role] = user.role
+                it[role] = user.role.dbValue // Use dbValue for consistent integer storage
                 it[profilePicture] = user.profilePicture
                 it[bio] = user.bio
                 it[name] = user.name
@@ -39,7 +40,7 @@ class UserRepository {
                     email = it[Users.email],
                     username = it[Users.username],
                     password = it[Users.password],
-                    role = it[Users.role],
+                    role = Role.fromDbValue(it[Users.role]), // Use fromDbValue to convert back to Role
                     profilePicture = it[Users.profilePicture],
                     bio = it[Users.bio],
                     name = it[Users.name],
@@ -57,7 +58,7 @@ class UserRepository {
                     email = it[Users.email],
                     username = it[Users.username],
                     password = it[Users.password],
-                    role = it[Users.role],
+                    role = Role.fromDbValue(it[Users.role]), // Use fromDbValue
                     profilePicture = it[Users.profilePicture],
                     bio = it[Users.bio],
                     name = it[Users.name],
@@ -74,7 +75,7 @@ class UserRepository {
                     it[email] = user.email
                     it[username] = user.username
                     it[password] = user.password
-                    it[role] = user.role
+                    it[role] = user.role.dbValue // Use dbValue for consistent integer storage
                     it[profilePicture] = user.profilePicture
                     it[bio] = user.bio
                     it[name] = user.name

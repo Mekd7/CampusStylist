@@ -76,6 +76,19 @@ class UserService(private val userRepository: UserRepository) {
         }
     }
 
+    fun createProfile(userId: Long, username: String, bio: String?, profilePicture: String?): Boolean {
+        return transaction {
+            val user = userRepository.findById(userId) ?: return@transaction false
+            val updatedUser = user.copy(
+                username = username,
+                bio = bio,
+                profilePicture = profilePicture,
+                hasCreatedProfile = true
+            )
+            userRepository.update(updatedUser)
+        }
+    }
+
     fun update(user: User): Boolean {
         return transaction {
             val updatedUser = user.copy(

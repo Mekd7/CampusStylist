@@ -12,3 +12,4 @@ data class Booking(
     val date: String, // ISO 8601 format, e.g., "2025-05-05T00:00:00Z"
     val status: String = "Pending"
 )
+

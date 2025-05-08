@@ -81,14 +81,25 @@ class BookingRepository {
 
     fun update(booking: Booking): Boolean = transaction {
         try {
+            logger.info("Attempting to update booking with ID: ${booking.id}")
             booking.id?.let {
-                Bookings.update({ Bookings.id eq it }) {
+                val updatedRows = Bookings.update({ Bookings.id eq it }) {
                     it[service] = booking.service
                     it[price] = booking.price
                     it[date] = booking.date
                     it[status] = booking.status
-                } > 0
-            } ?: false
+                }
+                if (updatedRows > 0) {
+                    logger.info("Booking with ID: $it updated successfully.")
+                    return@transaction true
+                } else {
+                    logger.warn("No booking found with ID: $it.")
+                    return@transaction false
+                }
+            } ?: run {
+                logger.warn("Booking ID is null.")
+                return@transaction false
+            }
         } catch (e: PSQLException) {
             logger.error("Failed to update booking: ${e.message}", e)
             throw IllegalStateException("Database error: ${e.message}", e)

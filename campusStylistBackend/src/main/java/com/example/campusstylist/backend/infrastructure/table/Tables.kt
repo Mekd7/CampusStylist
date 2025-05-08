@@ -9,7 +9,7 @@ object Users : Table() {
     val email = varchar("email", 255).uniqueIndex()
     val username = varchar("username", 255).uniqueIndex().nullable()
     val password = varchar("password", 255)
-    val role = enumeration("role", Role::class)
+    val role = integer("role") // Changed to integer to match Role.dbValue
     val profilePicture = text("profile_picture").nullable()
     val bio = text("bio").nullable()
     val name = varchar("name", 255).nullable()
@@ -50,4 +50,5 @@ object Services : Table() {
     val id = long("id").autoIncrement()
     val name = varchar("name", 255).uniqueIndex()
     override val primaryKey = PrimaryKey(id)
+    val price = double("price")
 }

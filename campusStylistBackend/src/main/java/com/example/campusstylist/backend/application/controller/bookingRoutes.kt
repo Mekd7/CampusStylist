@@ -28,6 +28,7 @@ fun Route.bookingRoutes(bookingService: BookingService, userService: UserService
                 if (booking.service.isBlank() || booking.price <= 0 || booking.date.isBlank()) {
                     return@post call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid input", "message" to "Service, price, and date are required"))
                 }
+
                 val createdBooking = bookingService.create(booking)
                 if (createdBooking != null) {
                     call.respond(HttpStatusCode.Created, createdBooking)
@@ -86,5 +87,6 @@ fun Route.bookingRoutes(bookingService: BookingService, userService: UserService
                 call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Server error", "message" to e.message))
             }
         }
+
     }
 }

@@ -8,7 +8,7 @@ import androidx.navigation.navArgument
 import com.example.campusstylistcomposed.ui.screens.ClientHomePage
 import com.example.campusstylistcomposed.ui.screens.ClientProfileScreen
 import com.example.campusstylistcomposed.ui.screens.CreateProfileScreen
-import com.example.campusstylistcomposed.ui.screens.HairDresserHomePage
+import com.example.campusstylistcomposed.ui.screens.HairDresserHomeScreen
 import com.example.campusstylistcomposed.ui.screens.HairDresserProfileScreen
 import com.example.campusstylistcomposed.ui.screens.HairDresserPostDetailScreen
 import com.example.campusstylistcomposed.ui.screens.ManageScheduleScreen
@@ -106,7 +106,7 @@ fun SetupNavGraph(navController: NavHostController) {
             arguments = listOf(navArgument("token") { defaultValue = "" })
         ) { backStackEntry ->
             val token = backStackEntry.arguments?.getString("token") ?: ""
-            HairDresserHomePage(
+            HairDresserHomeScreen(
                 token = token,
                 onLogout = {
                     navController.navigate("login") {

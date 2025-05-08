@@ -1,6 +1,7 @@
 package com.example.campusstylist.backend.application.controller
 
 import com.example.campusstylist.backend.data.AuthRequest
+import com.example.campusstylist.backend.data.LoginRequest
 import com.example.campusstylist.backend.data.AuthResponse
 import com.example.campusstylist.backend.domain.service.UserService
 import io.ktor.http.*
@@ -52,21 +53,28 @@ fun Route.authRoutes(userService: UserService) {
 
         post("/login") {
             try {
-                val request = call.receive<AuthRequest>()
+                val request = call.receive<LoginRequest>()  // <-- Updated type
                 logger.debug("Received login request: email=${request.email}")
 
                 // Validate email and password
                 if (request.email.isBlank() || request.password.isBlank()) {
                     logger.warn("Empty email or password: email=${request.email}")
-                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid input", "message" to "Email and password are required"))
+                    call.respond(
+                        HttpStatusCode.BadRequest,
+                        mapOf("error" to "Invalid input", "message" to "Email and password are required")
+                    )
                     return@post
                 }
+
                 val response = userService.signin(request.email, request.password)
                 if (response != null) {
                     call.respond(HttpStatusCode.OK, response)
                 } else {
                     logger.warn("Invalid credentials for email: ${request.email}")
-                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Unauthorized", "message" to "Invalid credentials"))
+                    call.respond(
+                        HttpStatusCode.Unauthorized,
+                        mapOf("error" to "Unauthorized", "message" to "Invalid credentials")
+                    )
                 }
             } catch (e: SerializationException) {
                 logger.error("Serialization error: ${e.message}", e)
@@ -79,5 +87,6 @@ fun Route.authRoutes(userService: UserService) {
                 call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Server error", "message" to e.message))
             }
         }
+
     }
 }

@@ -14,7 +14,3 @@ data class User(
     val name: String? = null,
     val hasCreatedProfile: Boolean = false
 )
-
-//enum class Role {
-//    STUDENT, HAIRDRESSER
-//}
