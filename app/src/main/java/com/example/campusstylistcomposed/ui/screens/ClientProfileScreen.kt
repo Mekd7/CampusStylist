@@ -28,7 +28,8 @@ fun ClientProfileScreen(
     onHomeClick: () -> Unit,
     onOrdersClick: () -> Unit,
     onProfileClick: () -> Unit,
-    navigateToLogin: (String) -> Unit
+    navigateToLogin: (String) -> Unit,
+    onEditProfileClick: () -> Unit
 ) {
     val backgroundColor = Color(0xFF222020)
     val pinkColor = Color(0xFFE0136C)
@@ -54,7 +55,7 @@ fun ClientProfileScreen(
             )
 
             androidx.compose.foundation.Image(
-                painter = painterResource(id = R.drawable.profile_icon), // Replace with actual profile image resource
+                painter = painterResource(id = R.drawable.profile_icon),
                 contentDescription = "Profile Image",
                 modifier = Modifier
                     .size(100.dp)
@@ -85,6 +86,18 @@ fun ClientProfileScreen(
             }
 
             Button(
+                onClick = { onEditProfileClick() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .padding(bottom = 16.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = pinkColor, contentColor = whiteColor),
+                shape = CircleShape
+            ) {
+                Text("Edit Profile", fontSize = 16.sp)
+            }
+
+            Button(
                 onClick = { navigateToLogin(token) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -101,7 +114,7 @@ fun ClientProfileScreen(
             onHomeClick = onHomeClick,
             onSecondaryClick = onOrdersClick,
             onTertiaryClick = onProfileClick,
-            onProfileClick = onProfileClick, // Tertiary click is Profile for client
+            onProfileClick = onProfileClick,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
@@ -116,6 +129,7 @@ fun ClientProfileScreenPreview() {
         onHomeClick = { /* Mock home click */ },
         onOrdersClick = { /* Mock orders click */ },
         onProfileClick = { /* Mock profile click */ },
-        navigateToLogin = { /* Mock navigate to login */ }
+        navigateToLogin = { /* Mock navigate to login */ },
+        onEditProfileClick = { /* Mock edit profile click */ }
     )
 }

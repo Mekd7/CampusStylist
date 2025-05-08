@@ -1,6 +1,5 @@
 package com.example.campusstylistcomposed.ui.screens
 
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,11 +15,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
-import com.example.campusstylistcomposed.R
+import com.example.campusstylistcomposed.ui.components.Footer
+import com.example.campusstylistcomposed.ui.components.FooterType
 
 @Composable
-fun PostDetailScreen() {
+fun PostDetailScreen(
+    token: String,
+    imageId: Int,
+    description: String,
+    onHomeClick: () -> Unit,
+    onOrdersClick: () -> Unit,
+    onProfileClick: () -> Unit,
+    onBackClick: () -> Unit
+) {
     val darkBackgroundColor = Color(0xFF222020)
     val whiteColor = Color(0xFFFFFFFF)
     val pinkColor = Color(0xFFE0136C)
@@ -33,94 +40,53 @@ fun PostDetailScreen() {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = 80.dp),
+                .padding(top = 16.dp, bottom = 80.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Profile Name
             Text(
-                text = "Ashley Gram",
+                text = "Post Details",
                 color = whiteColor,
                 fontSize = 24.sp,
-                fontWeight = FontWeight.Black,
-                modifier = Modifier
-                    .padding(top = 40.dp, bottom = 16.dp)
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 16.dp)
             )
 
-            // Post Image
             Image(
-                painter = painterResource(id = R.drawable.hair_style), // Use appropriate image resource
-                contentDescription = "Knotless Goddess Braids",
-                contentScale = ContentScale.Crop,
+                painter = painterResource(id = imageId),
+                contentDescription = "Post Image",
+                contentScale = ContentScale.Fit,
                 modifier = Modifier
                     .size(300.dp)
                     .clip(RoundedCornerShape(8.dp))
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Post Details
-            Column(
-                modifier = Modifier.padding(horizontal = 24.dp),
-                horizontalAlignment = Alignment.Start
-            ) {
-                Text(
-                    text = "Knotless Goddess Braids",
-                    color = whiteColor,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Black
-                )
-                Text(
-                    text = "16 inches",
-                    color = whiteColor,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Black
-                )
-                Text(
-                    text = "Took 5 hours",
-                    color = whiteColor,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Black
-                )
-            }
+            Text(
+                text = description,
+                color = whiteColor,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Normal,
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Bottom Navigation
-        Row(
+        Footer(
+            footerType = FooterType.CLIENT,
+            onHomeClick = onHomeClick,
+            onSecondaryClick = onOrdersClick,
+            onTertiaryClick = onProfileClick,
+            onProfileClick = onProfileClick,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                 .background(pinkColor)
-                .padding(vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.nav_icon_3),
-                contentDescription = "Home",
-                modifier = Modifier.size(24.dp)
-            )
-            Image(
-                painter = painterResource(id = R.drawable.nav_icon_4),
-                contentDescription = "Info",
-                modifier = Modifier.size(24.dp)
-            )
-            Image(
-                painter = painterResource(id = R.drawable.nav_icon_2),
-                contentDescription = "Calendar",
-                modifier = Modifier.size(24.dp)
-            )
-            Image(
-                painter = painterResource(id = R.drawable.nav_icon_1),
-                contentDescription = "Profile",
-                modifier = Modifier.size(24.dp)
-            )
-        }
+                .padding(vertical = 12.dp)
+        )
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PostDetailScreenPreview() {
-    PostDetailScreen()
-}
+

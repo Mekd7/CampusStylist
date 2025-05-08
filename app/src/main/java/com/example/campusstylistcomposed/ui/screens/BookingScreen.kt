@@ -70,7 +70,7 @@ fun BookingScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 16.dp),
+                .padding(top = 16.dp, bottom = 80.dp), // Add bottom padding to account for footer
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -199,6 +199,7 @@ fun BookingScreen(
                         )
                     }
                 }
+                Spacer(modifier = Modifier.height(16.dp)) // Add gap between confirm button and footer
             } else {
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -216,4 +217,3 @@ fun BookingScreen(
         )
     }
 }
-

@@ -16,3 +16,4 @@ data class HairdresserPost(
     val length: String,
     val duration: String
 )
+

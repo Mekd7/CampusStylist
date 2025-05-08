@@ -19,10 +19,16 @@ import com.example.campusstylistcomposed.ui.screens.EditBookingScreen
 import com.example.campusstylistcomposed.ui.screens.LoginScreen
 import com.example.campusstylistcomposed.ui.screens.MyRequestsScreen
 import com.example.campusstylistcomposed.ui.screens.SignUpScreen
+import com.example.campusstylistcomposed.ui.screens.ProfileVisitScreen
+import com.example.campusstylistcomposed.ui.screens.PostDetailScreen
+import com.example.campusstylistcomposed.ui.screens.EditProfile
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.campusstylistcomposed.ui.viewmodel.ClientHomeViewModel
-import com.example.campusstylistcomposed.ui.viewmodel.CreateProfileViewModel
 import com.example.campusstylistcomposed.ui.viewmodel.HairDresserHomeViewModel
+import com.example.campusstylistcomposed.ui.viewmodel.ManageScheduleViewModel
+import com.example.campusstylistcomposed.ui.viewmodel.BookingViewModel
+import java.net.URLEncoder
+import java.net.URLDecoder
 
 @Composable
 fun SetupNavGraph(navController: NavHostController) {
@@ -96,9 +102,9 @@ fun SetupNavGraph(navController: NavHostController) {
                 onOrdersClick = { navController.navigate("orders/$token") },
                 onProfileClick = { navController.navigate("clientProfile/$token") },
                 onHairdresserProfileClick = { hairdresserId ->
-                    navController.navigate("hairdresserProfile/$token/$hairdresserId")
+                    navController.navigate("profileVisit/$token/$hairdresserId")
                 },
-                viewModel = viewModel()
+                viewModel = viewModel<ClientHomeViewModel>()
             )
         }
         composable(
@@ -106,7 +112,9 @@ fun SetupNavGraph(navController: NavHostController) {
             arguments = listOf(navArgument("token") { defaultValue = "" })
         ) { backStackEntry ->
             val token = backStackEntry.arguments?.getString("token") ?: ""
+            val hairDresserHomeViewModel: HairDresserHomeViewModel = viewModel()
             HairDresserHomeScreen(
+                navController = navController,
                 token = token,
                 onLogout = {
                     navController.navigate("login") {
@@ -117,7 +125,7 @@ fun SetupNavGraph(navController: NavHostController) {
                 onRequestsClick = { navController.navigate("myRequests/$token") },
                 onScheduleClick = { navController.navigate("manageSchedule/$token") },
                 onProfileClick = { navController.navigate("profile/$token") },
-                viewModel = viewModel()
+                viewModel = hairDresserHomeViewModel
             )
         }
         composable(
@@ -166,7 +174,7 @@ fun SetupNavGraph(navController: NavHostController) {
             val duration = backStackEntry.arguments?.getString("duration") ?: ""
             HairDresserPostDetailScreen(
                 token = token,
-                hairdresserName = hairdresserId, // Replace with actual name if needed
+                hairdresserName = hairdresserId,
                 imageId = imageId,
                 serviceName = serviceName,
                 length = length,
@@ -192,7 +200,8 @@ fun SetupNavGraph(navController: NavHostController) {
                 onHomeClick = { navController.navigate("clientHome/$token") },
                 onOrdersClick = { navController.navigate("orders/$token") },
                 onProfileClick = { /* Already on profile */ },
-                navigateToLogin = { navController.navigate("login") { popUpTo(0) { inclusive = true } } }
+                navigateToLogin = { navController.navigate("login") { popUpTo(0) { inclusive = true } } },
+                onEditProfileClick = { navController.navigate("editProfile/$token") }
             )
         }
         composable(
@@ -205,20 +214,6 @@ fun SetupNavGraph(navController: NavHostController) {
                 onBackClick = { navController.popBackStack() },
                 onHomeClick = { navController.navigate("clientHome/$token") },
                 onOrdersClick = { /* Already on orders */ },
-                onProfileClick = { navController.navigate("clientProfile/$token") },
-                viewModel = viewModel()
-            )
-        }
-        composable(
-            "booking/{token}",
-            arguments = listOf(navArgument("token") { defaultValue = "" })
-        ) { backStackEntry ->
-            val token = backStackEntry.arguments?.getString("token") ?: ""
-            BookingScreen(
-                token = token,
-                onBookingConfirmed = { navController.navigate("orders/$token") },
-                onHomeClick = { navController.navigate("clientHome/$token") },
-                onOrdersClick = { navController.navigate("orders/$token") },
                 onProfileClick = { navController.navigate("clientProfile/$token") },
                 viewModel = viewModel()
             )
@@ -239,7 +234,8 @@ fun SetupNavGraph(navController: NavHostController) {
                 onRequestsClick = { navController.navigate("myRequests/$token") },
                 onScheduleClick = { /* Already on manage schedule */ },
                 onProfileClick = { navController.navigate("profile/$token") },
-                viewModel = viewModel()
+                navController = navController,
+                viewModel = viewModel<ManageScheduleViewModel>()
             )
         }
         composable(
@@ -271,11 +267,88 @@ fun SetupNavGraph(navController: NavHostController) {
                 onBackClick = { navController.popBackStack() }
             )
         }
-        composable("editBooking") {
+        composable(
+            "editBooking/{token}",
+            arguments = listOf(navArgument("token") { defaultValue = "" })
+        ) { backStackEntry ->
+            val token = backStackEntry.arguments?.getString("token") ?: ""
             EditBookingScreen(
                 navController = navController,
                 onBackClick = { navController.popBackStack() }
             )
+        }
+        composable(
+            "profileVisit/{token}/{hairdresserId}",
+            arguments = listOf(
+                navArgument("token") { defaultValue = "" },
+                navArgument("hairdresserId") { defaultValue = "" }
+            )
+        ) { backStackEntry ->
+            val token = backStackEntry.arguments?.getString("token") ?: ""
+            ProfileVisitScreen(
+                token = token,
+                onHomeClick = { navController.navigate("clientHome/$token") },
+                onOrdersClick = { navController.navigate("orders/$token") },
+                onProfileClick = { navController.navigate("clientProfile/$token") },
+                onBookClick = { navController.navigate("booking/$token") }
+            )
+        }
+        composable(
+            "booking/{token}",
+            arguments = listOf(navArgument("token") { defaultValue = "" })
+        ) { backStackEntry ->
+            val token = backStackEntry.arguments?.getString("token") ?: ""
+            BookingScreen(
+                token = token,
+                onBookingConfirmed = { navController.navigate("orders/$token") },
+                onHomeClick = { navController.navigate("clientHome/$token") },
+                onOrdersClick = { navController.navigate("orders/$token") },
+                onProfileClick = { navController.navigate("clientProfile/$token") },
+                viewModel = viewModel<BookingViewModel>()
+            )
+        }
+        composable(
+            "postDetail/{token}/{imageId}/{description}",
+            arguments = listOf(
+                navArgument("token") { defaultValue = "" },
+                navArgument("imageId") { defaultValue = "0" },
+                navArgument("description") { defaultValue = "" }
+            )
+        ) { backStackEntry ->
+            val token = backStackEntry.arguments?.getString("token") ?: ""
+            val imageId = backStackEntry.arguments?.getString("imageId")?.toIntOrNull() ?: 0
+            val encodedDescription = backStackEntry.arguments?.getString("description") ?: ""
+            val description = URLDecoder.decode(encodedDescription, "UTF-8")
+            PostDetailScreen(
+                token = token,
+                imageId = imageId,
+                description = description,
+                onHomeClick = { navController.navigate("clientHome/$token") },
+                onOrdersClick = { navController.navigate("orders/$token") },
+                onProfileClick = { navController.navigate("clientProfile/$token") },
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        composable(
+            "editProfile/{token}",
+            arguments = listOf(navArgument("token") { defaultValue = "" })
+        ) { backStackEntry ->
+            val token = backStackEntry.arguments?.getString("token") ?: ""
+            EditProfile(
+                token = token,
+                onSaveChanges = { newName, newBio ->
+                    navController.popBackStack()
+                },
+                onBackClick = { navController.popBackStack() },
+                navController = navController
+            )
+        }
+        composable(
+            "profile/{token}",
+            arguments = listOf(navArgument("token") { defaultValue = "" })
+        ) { backStackEntry ->
+            val token = backStackEntry.arguments?.getString("token") ?: ""
+            // Placeholder screen
         }
     }
 }
