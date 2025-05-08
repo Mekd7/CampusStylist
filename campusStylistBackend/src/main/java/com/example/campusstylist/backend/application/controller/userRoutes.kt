@@ -1,5 +1,6 @@
 package com.example.campusstylist.backend.application.controller
 
+import com.example.campusstylist.backend.domain.model.Role
 import com.example.campusstylist.backend.domain.model.User
 import com.example.campusstylist.backend.domain.service.UserService
 import io.ktor.http.*
@@ -13,9 +14,11 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.SerializationException
 import java.io.File
 import java.sql.SQLException
+import java.util.*
 
 fun Route.userRoutes(userService: UserService) {
     authenticate("auth-jwt") {
+        // Create profile (both roles, post-signup)
         post("/profile") {
             try {
                 val principal = call.principal<JWTPrincipal>()
@@ -29,6 +32,13 @@ fun Route.userRoutes(userService: UserService) {
                         HttpStatusCode.Unauthorized,
                         mapOf("error" to "Unauthorized", "message" to "User not found")
                     )
+
+                if (user.hasCreatedProfile) {
+                    return@post call.respond(
+                        HttpStatusCode.BadRequest,
+                        mapOf("error" to "Profile already exists", "message" to "Profile already created")
+                    )
+                }
 
                 val multipartData = call.receiveMultipart()
                 var username: String? = null
@@ -72,6 +82,7 @@ fun Route.userRoutes(userService: UserService) {
             }
         }
 
+        // Get profile (both roles)
         get("/profile/{id}") {
             try {
                 val principal = call.principal<JWTPrincipal>()
@@ -104,6 +115,7 @@ fun Route.userRoutes(userService: UserService) {
             }
         }
 
+        // Update profile (both roles)
         put("/profile/{id}") {
             try {
                 val principal = call.principal<JWTPrincipal>()
@@ -128,16 +140,37 @@ fun Route.userRoutes(userService: UserService) {
                         mapOf("error" to "Forbidden", "message" to "You can only update your own profile")
                     )
                 }
-                val updatedUser = call.receive<User>()
-                if (updatedUser.email.isBlank()) {
-                    return@put call.respond(
-                        HttpStatusCode.BadRequest,
-                        mapOf("error" to "Invalid input", "message" to "Email is required")
-                    )
+
+                val multipartData = call.receiveMultipart()
+                var username: String? = null
+                var bio: String? = null
+                var profilePictureUrl: String? = null
+
+                multipartData.forEachPart { part ->
+                    when (part) {
+                        is PartData.FormItem -> {
+                            when (part.name) {
+                                "username" -> username = part.value
+                                "bio" -> bio = part.value
+                            }
+                        }
+                        is PartData.FileItem -> {
+                            profilePictureUrl = handleFileUpload(part)
+                        }
+                        else -> part.dispose()
+                    }
                 }
-                val updated = userService.update(updatedUser.copy(id = id))
+
+                // Use existing values if not provided
+                val updatedUser = user.copy(
+                    username = if (!username.isNullOrBlank()) username else user.username,
+                    bio = if (!bio.isNullOrBlank()) bio else user.bio,
+                    profilePicture = profilePictureUrl ?: user.profilePicture
+                )
+
+                val updated = userService.update(updatedUser)
                 if (updated) {
-                    call.respond(HttpStatusCode.OK, mapOf("message" to "Profile updated"))
+                    call.respond(HttpStatusCode.OK, mapOf("message" to "Profile updated successfully"))
                 } else {
                     call.respond(HttpStatusCode.NotFound, mapOf("error" to "Not found", "message" to "User not found"))
                 }
@@ -150,6 +183,7 @@ fun Route.userRoutes(userService: UserService) {
             }
         }
 
+        // Delete account (both roles)
         delete("/profile/{id}") {
             try {
                 val principal = call.principal<JWTPrincipal>()
@@ -186,23 +220,42 @@ fun Route.userRoutes(userService: UserService) {
                 call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Server error", "message" to e.message))
             }
         }
+
+        // Logout (both roles)
+        post("/logout") {
+            try {
+                val principal = call.principal<JWTPrincipal>()
+                val email = principal?.payload?.getClaim("email")?.asString()
+                    ?: return@post call.respond(
+                        HttpStatusCode.Unauthorized,
+                        mapOf("error" to "Unauthorized", "message" to "Invalid token")
+                    )
+                // Invalidate token on client side (JWT is stateless, so client should discard token)
+                call.respond(HttpStatusCode.OK, mapOf("message" to "Logged out successfully"))
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Server error", "message" to e.message))
+            }
+        }
     }
 }
 
 suspend fun handleFileUpload(part: PartData.FileItem): String? {
     val fileName = part.originalFileName ?: return null
+    val extension = fileName.substringAfterLast(".", "").lowercase()
+    if (extension !in listOf("jpg", "jpeg", "png")) {
+        return null // Only allow specific image types
+    }
+    val uniqueFileName = "${UUID.randomUUID()}.$extension" // Prevent name collisions
     val fileBytes = part.streamProvider().readBytes()
-    return saveFile(fileName, fileBytes)
+    return saveFile(uniqueFileName, fileBytes)
 }
 
 suspend fun saveFile(fileName: String, fileBytes: ByteArray): String {
-    // Ensure directory exists
     val dir = File("uploads")
     if (!dir.exists()) {
-        dir.mkdirs() // Create the directory if it doesn't exist
+        dir.mkdirs()
     }
-
-    val file = File(dir, fileName) // Save in the uploads directory
+    val file = File(dir, fileName)
     file.writeBytes(fileBytes)
-    return file.absolutePath // Return the absolute path
+    return "/uploads/$fileName" // Return relative URL path
 }

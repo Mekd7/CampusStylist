@@ -2,6 +2,7 @@ package com.example.campusstylist.backend
 
 import com.example.campusstylist.backend.application.controller.*
 import com.example.campusstylist.backend.domain.model.Service
+import com.example.campusstylist.backend.domain.service.UserService
 import com.example.campusstylist.backend.domain.service.*
 import com.example.campusstylist.backend.infrastructure.DatabaseConfig
 import com.example.campusstylist.backend.infrastructure.repository.*
@@ -17,10 +18,12 @@ import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.plugins.statuspages.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.http.content.*
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.slf4j.LoggerFactory
+import java.io.File
 
 fun main() {
     embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
@@ -69,7 +72,7 @@ fun Application.module() {
     val requestRepository = RequestRepository()
     val bookingRepository = BookingRepository()
     val serviceRepository = ServiceRepository()
-    val userService = UserService(userRepository)
+    val userService = UserService(userRepository) // Correct instantiation
     val postService = PostService(postRepository)
     val requestService = RequestService(requestRepository)
     val bookingService = BookingService(bookingRepository)
@@ -101,6 +104,11 @@ fun Application.module() {
 
     // Configure routing
     routing {
+        // Serve static files from the uploads directory
+        staticFiles("/uploads", File("uploads")) {
+            enableAutoHeadResponse()
+        }
+
         authRoutes(userService)
         userRoutes(userService)
         postRoutes(postService, userService)
