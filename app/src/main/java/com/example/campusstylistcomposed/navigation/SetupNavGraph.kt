@@ -54,8 +54,12 @@ fun SetupNavGraph(navController: NavHostController) {
                 onNavigateToLogin = { navController.navigate("login") },
                 onSignupSuccess = { role, hasCreatedProfile, userId ->
                     val isHairdresser = role.uppercase() == "HAIRSTYLIST"
-                    if (hasCreatedProfile) {
-                        navController.navigate(if (isHairdresser) "hairdresserHome/$userId" else "clientHome/$userId") {
+                    if (hasCreatedProfile && isHairdresser) {
+                        navController.navigate("hairdresserHome/$userId") {
+                            popUpTo("signup") { inclusive = true }
+                        }
+                    } else if (hasCreatedProfile) {
+                        navController.navigate("clientHome/$userId") {
                             popUpTo("signup") { inclusive = true }
                         }
                     } else {
@@ -79,8 +83,14 @@ fun SetupNavGraph(navController: NavHostController) {
                 token = token,
                 isHairdresser = isHairdresser,
                 onProfileCreated = {
-                    navController.navigate(if (isHairdresser) "hairdresserHome/$token" else "clientHome/$token") {
-                        popUpTo("createProfile/{token}/{isHairdresser}") { inclusive = true }
+                    if (isHairdresser) {
+                        navController.navigate("hairdresserHome/$token") {
+                            popUpTo("createProfile/{token}/{isHairdresser}") { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate("clientHome/$token") {
+                            popUpTo("createProfile/{token}/{isHairdresser}") { inclusive = true }
+                        }
                     }
                 },
                 viewModel = viewModel()
@@ -140,7 +150,7 @@ fun SetupNavGraph(navController: NavHostController) {
             HairDresserProfileScreen(
                 token = token,
                 hairdresserId = hairdresserId,
-                isOwnProfile = token == hairdresserId, // Check if it's the hairdresser's own profile
+                isOwnProfile = token == hairdresserId,
                 onLogout = {
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
