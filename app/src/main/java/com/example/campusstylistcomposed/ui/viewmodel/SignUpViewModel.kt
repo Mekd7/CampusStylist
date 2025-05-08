@@ -2,6 +2,9 @@ package com.example.campusstylistcomposed.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.campusstylistcomposed.data.AuthRepository
+import com.example.campusstylistcomposed.network.ApiService
+import com.example.campusstylistcomposed.network.SignUpRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -10,7 +13,10 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class SignUpViewModel @Inject constructor() : ViewModel() {
+class SignUpViewModel @Inject constructor(
+    private val apiService: ApiService,
+    private val authRepository: AuthRepository
+) : ViewModel() {
     private val _email = MutableStateFlow("")
     val email: StateFlow<String> = _email.asStateFlow()
 
@@ -39,15 +45,18 @@ class SignUpViewModel @Inject constructor() : ViewModel() {
             _errorMessage.value = null
 
             try {
-                // Mock signup response
-                val role = if (_isHairdresser.value) "HAIRSTYLIST" else "STUDENT"
-                val userId = System.currentTimeMillis() // Mock user ID
-                val hasCreatedProfile = false // Navigate to createProfile screen
-
-                _userId.value = userId
-                onSuccess(role, hasCreatedProfile, userId)
+                val role = if (_isHairdresser.value) "HAIRDRESSER" else "CLIENT"
+                val request = SignUpRequest(
+                    email = _email.value,
+                    password = _password.value,
+                    role = role
+                )
+                val response = apiService.signUp(request)
+                _userId.value = response.token.hashCode().toLong() // Use token hash as userId (adjust as needed)
+                authRepository.saveToken(response.token) // Save the token
+                onSuccess(response.role, response.hasCreatedProfile, _userId.value)
             } catch (e: Exception) {
-                _errorMessage.value = "Mock signup failed: ${e.message}"
+                _errorMessage.value = "Signup failed: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
