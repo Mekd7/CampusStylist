@@ -7,24 +7,20 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.example.campusstylistcomposed.R
-
-data class Post(
-    val stylistName: String,
-    val imageResId: Int
-)
+import com.example.campusstylistcomposed.ui.screens.HairdresserPost
 
 class HairDresserHomeViewModel : ViewModel() {
     private val _token = MutableStateFlow("")
     val token: StateFlow<String> = _token.asStateFlow()
 
-    private val _posts = MutableStateFlow<List<Post>>(emptyList())
-    val posts: StateFlow<List<Post>> = _posts.asStateFlow()
+    private val _posts = MutableStateFlow<List<HairdresserPost>>(emptyList())
+    val posts: StateFlow<List<HairdresserPost>> = _posts.asStateFlow()
 
     init {
         _posts.value = listOf(
-            Post("You", R.drawable.hair_style),
-            Post("You", R.drawable.hair_style),
-            Post("You", R.drawable.hair_style)
+            HairdresserPost(R.drawable.hair_style, "Braids", "16 inches", "5 hours"),
+            HairdresserPost(R.drawable.hair_style, "Weave", "20 inches", "4 hours"),
+            HairdresserPost(R.drawable.hair_style, "Straight", "Long", "3 hours")
         )
     }
 

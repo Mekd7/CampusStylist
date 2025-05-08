@@ -36,7 +36,7 @@ fun EditPostScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Button(onClick = { onBackClick() }) {
+            Button(onClick = { onBackClick(); navController.popBackStack() }) {
                 Text("Back")
             }
             Button(onClick = { navController.popBackStack() }) {

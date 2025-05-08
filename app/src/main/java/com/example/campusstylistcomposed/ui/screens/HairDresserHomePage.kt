@@ -2,158 +2,99 @@ package com.example.campusstylistcomposed.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import com.example.campusstylistcomposed.ui.components.Footer
 import com.example.campusstylistcomposed.ui.components.FooterType
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.campusstylistcomposed.ui.viewmodel.HairDresserHomeViewModel
-import com.example.campusstylistcomposed.ui.viewmodel.Post
-import com.example.campusstylistcomposed.R
+import kotlinx.coroutines.flow.StateFlow
 
 @Composable
-fun HairDresserHomePage(
+fun HairdresserHomeScreen(
+    navController: NavHostController,
     token: String,
-    onLogout: () -> Unit,
-    onHomeClick: () -> Unit,
-    onRequestsClick: () -> Unit,
-    onScheduleClick: () -> Unit,
-    onProfileClick: () -> Unit,
     viewModel: HairDresserHomeViewModel = viewModel()
 ) {
-    LaunchedEffect(token) {
-        viewModel.setToken(token)
-    }
+    val posts by viewModel.posts.collectAsState() // Observe StateFlow directly
 
-    val posts by viewModel.posts.collectAsState()
+    val backgroundColor = Color(0xFF1C2526)
+    val pinkColor = Color(0xFFFF4081)
+    val whiteColor = Color.White
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF222020))
+            .background(backgroundColor)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 16.dp, end = 16.dp, top = 16.dp)
-                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
         ) {
-            Text(
-                text = "CampusStylist!",
-                fontSize = 25.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
-
-            posts.forEach { post ->
-                StylistCardFigma(post)
-                Spacer(modifier = Modifier.height(24.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = { navController.navigate("editProfile/$token") },
+                    colors = ButtonDefaults.buttonColors(containerColor = pinkColor)
+                ) {
+                    Text("Edit Profile", color = whiteColor)
+                }
+                Button(
+                    onClick = { navController.navigate("addPost/$token") },
+                    colors = ButtonDefaults.buttonColors(containerColor = pinkColor)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add Post",
+                        tint = whiteColor
+                    )
+                    Text("Add Post", color = whiteColor)
+                }
             }
-
-            Spacer(modifier = Modifier.height(60.dp))
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(posts) { post ->
+                    Image(
+                        painter = painterResource(id = post.imageId),
+                        contentDescription = post.serviceName,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .clickable { navController.navigate("postDetailForHairdressers/${token}/${post.serviceName}") }
+                    )
+                }
+            }
         }
-
         Footer(
             footerType = FooterType.HAIRDRESSER,
-            onHomeClick = onHomeClick,
-            onSecondaryClick = onRequestsClick,
-            onTertiaryClick = onScheduleClick,
-            onProfileClick = onProfileClick,
+            onHomeClick = { navController.navigate("hairdresserHome/$token") },
+            onSecondaryClick = { navController.navigate("requests/$token") },
+            onTertiaryClick = { navController.navigate("manageSchedule/$token") },
+            onProfileClick = { navController.navigate("editProfile/$token") },
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
-}
-
-@Composable
-fun StylistCardFigma(post: Post) {
-    Column {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 8.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .background(Color.White, CircleShape),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.profile_icon),
-                    contentDescription = "Stylist Profile",
-                    modifier = Modifier.fillMaxSize().clip(CircleShape)
-                )
-            }
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            Text(
-                text = post.stylistName,
-                fontSize = 18.sp,
-                color = Color(0xFFA7A3A3)
-            )
-        }
-
-        Image(
-            painter = painterResource(id = post.imageResId),
-            contentDescription = "Hairstyle",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1.33f)
-                .padding(bottom = 12.dp)
-                .clip(RoundedCornerShape(8.dp))
-        )
-
-        TextButton(
-            onClick = { /* TODO: Navigate to Profile */ },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(40.dp)
-                .clip(RoundedCornerShape(30.dp))
-                .background(Color(0xFFE0136C)),
-            contentPadding = PaddingValues(0.dp)
-        ) {
-            Text(
-                text = "Visit Profile",
-                color = Color.White,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun HairDresserHomePagePreview() {
-    val viewModel = HairDresserHomeViewModel().apply {
-        setToken("mock_token")
-    }
-
-    HairDresserHomePage(
-        token = "mock_token",
-        onLogout = {},
-        onHomeClick = {},
-        onRequestsClick = {},
-        onScheduleClick = {},
-        onProfileClick = {},
-        viewModel = viewModel
-    )
 }

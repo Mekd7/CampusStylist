@@ -1,51 +1,22 @@
 package com.example.campusstylistcomposed.ui.viewmodel
 
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import com.example.campusstylistcomposed.R
-
-data class Stylist(
-    val name: String,
-    val imageResId: Int
-)
+import com.example.campusstylistcomposed.ui.screens.Post
 
 class ClientHomeViewModel : ViewModel() {
-    private val _token = MutableStateFlow("")
-    val token: StateFlow<String> = _token.asStateFlow()
-
-    private val _stylists = MutableStateFlow<List<Stylist>>(emptyList())
-    val stylists: StateFlow<List<Stylist>> = _stylists.asStateFlow()
+    private val _posts = mutableStateListOf<Post>()
+    val posts: List<Post> get() = _posts
 
     init {
-        _stylists.value = listOf(
-            Stylist("Stylist 1", R.drawable.campstylist),
-            Stylist("Stylist 2", R.drawable.campstylist),
-            Stylist("Stylist 3", R.drawable.campstylist)
+        // Mock data for ClientHomePage
+        _posts.addAll(
+            listOf(
+                Post("Ashley Gram", R.drawable.braid, "hairdresser1"),
+                Post("Jane Doe", R.drawable.straight, "hairdresser2"),
+                Post("Emma Smith", R.drawable.braid, "hairdresser3")
+            )
         )
-    }
-
-    fun setToken(token: String) {
-        _token.value = token
-    }
-
-    fun logout(onLogout: () -> Unit) {
-        _token.value = ""
-        onLogout()
-    }
-
-    fun navigateToHome(onHomeClick: () -> Unit) {
-        onHomeClick()
-    }
-
-    fun navigateToOrders(onOrdersClick: () -> Unit) {
-        onOrdersClick()
-    }
-
-    fun navigateToProfile(onProfileClick: () -> Unit) {
-        onProfileClick()
     }
 }

@@ -17,13 +17,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.campusstylistcomposed.R
-import com.example.campusstylistcomposed.ui.booking.BookingViewModel
+import com.example.campusstylistcomposed.ui.viewmodel.BookingViewModel
+import com.example.campusstylistcomposed.ui.components.Footer
+import com.example.campusstylistcomposed.ui.components.FooterType
+
 
 @Composable
 fun OrderScreen(
+    token: String,
     onBackClick: () -> Unit,
+    onHomeClick: () -> Unit,
+    onOrdersClick: () -> Unit,
+    onProfileClick: () -> Unit,
     viewModel: BookingViewModel = viewModel()
 ) {
     // Observe the orders list to ensure recomposition
@@ -35,130 +43,146 @@ fun OrderScreen(
     val whiteColor = Color.White
     val blackColor = Color.Black
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
             .background(backgroundColor)
     ) {
-        Box(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .background(pinkColor)
-                .padding(top = 40.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
+                .fillMaxSize()
         ) {
-            IconButton(
-                onClick = onBackClick,
-                modifier = Modifier.align(Alignment.CenterStart)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(pinkColor)
+                    .padding(top = 40.dp, bottom = 16.dp, start = 16.dp, end = 16.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack, // Updated from ArrowLeft
-                    contentDescription = "Back",
-                    tint = whiteColor
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier.align(Alignment.CenterStart)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = whiteColor
+                    )
+                }
+                Text(
+                    text = "Orders",
+                    color = whiteColor,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.align(Alignment.Center)
                 )
             }
-            Text(
-                text = "Orders",
-                color = whiteColor,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.Center)
-            )
-        }
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = "Hair dresser",
-                color = whiteColor,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Service",
-                color = whiteColor,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Status",
-                color = whiteColor,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Hair dresser",
+                    color = whiteColor,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Service",
+                    color = whiteColor,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "Status",
+                    color = whiteColor,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(orders) { order ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(orders) { order ->
                     Row(
-                        verticalAlignment = Alignment.CenterVertically
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.braid),
-                            contentDescription = "Hairdresser Icon",
-                            modifier = Modifier
-                                .size(40.dp)
-                                .background(whiteColor.copy(alpha = 0.2f), CircleShape)
-                                .padding(8.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.braid),
+                                contentDescription = "Hairdresser Icon",
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .background(whiteColor.copy(alpha = 0.2f), CircleShape)
+                                    .padding(8.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = order.hairdresser,
+                                color = whiteColor,
+                                fontSize = 16.sp
+                            )
+                        }
                         Text(
-                            text = order.hairdresser,
+                            text = order.service,
+                            color = whiteColor,
+                            fontSize = 16.sp
+                        )
+                        Text(
+                            text = order.status,
                             color = whiteColor,
                             fontSize = 16.sp
                         )
                     }
-                    Text(
-                        text = order.service,
-                        color = whiteColor,
-                        fontSize = 16.sp
-                    )
-                    Text(
-                        text = order.status,
-                        color = whiteColor,
-                        fontSize = 16.sp
-                    )
                 }
             }
         }
 
-        Row(
+        Footer(
+            footerType = FooterType.CLIENT,
+            onHomeClick = onHomeClick,
+            onSecondaryClick = onOrdersClick,
+            onTertiaryClick = onProfileClick,
+            onProfileClick = onProfileClick,
             modifier = Modifier
+                .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .background(pinkColor)
-                .padding(vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            IconButton(onClick = { /* Navigate to Home */ }) {
-                Icon(
-                    painter = painterResource(id = android.R.drawable.ic_menu_today),
-                    contentDescription = "Home",
-                    tint = blackColor
-                )
-            }
-            IconButton(onClick = { /* Already on Orders */ }) {
-                Icon(
-                    painter = painterResource(id = android.R.drawable.ic_menu_view),
-                    contentDescription = "Orders",
-                    tint = blackColor
-                )
-            }
-        }
+        )
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun OrderScreenPreview() {
+    val viewModel = BookingViewModel().apply {
+        // Use the helper method to set mock orders
+        setOrdersForPreview(
+            listOf(
+                Order(hairdresser = "Hairdresser 1", service = "Braid", status = "APPROVED"),
+                Order(hairdresser = "Hairdresser 2", service = "Weave", status = "PENDING")
+            )
+        )
+    }
+
+    OrderScreen(
+        token = "mock_token",
+        onBackClick = { /* Mock back click */ },
+        onHomeClick = { /* Mock home click */ },
+        onOrdersClick = { /* Mock orders click */ },
+        onProfileClick = { /* Mock profile click */ },
+        viewModel = viewModel
+    )
 }

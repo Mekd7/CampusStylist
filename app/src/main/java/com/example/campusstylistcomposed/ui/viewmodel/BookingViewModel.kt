@@ -1,4 +1,4 @@
-package com.example.campusstylistcomposed.ui.booking
+package com.example.campusstylistcomposed.ui.viewmodel
 
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -48,5 +48,11 @@ class BookingViewModel : ViewModel() {
 
     fun onNavigated() {
         _navigateToOrders.value = false // Reset navigation signal
+    }
+
+    // Helper method for preview
+    fun setOrdersForPreview(orders: List<Order>) {
+        _orders.clear()
+        _orders.addAll(orders)
     }
 }

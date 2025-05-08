@@ -6,9 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,24 +22,25 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.campusstylistcomposed.R
 import com.example.campusstylistcomposed.ui.components.Footer
 import com.example.campusstylistcomposed.ui.components.FooterType
-import com.example.campusstylistcomposed.ui.viewmodel.ClientHomeViewModel
-
-data class Post(
-    val hairdresserName: String,
-    val imageId: Int,
-    val hairdresserId: String
-)
+import com.example.campusstylistcomposed.ui.viewmodel.HairDresserProfileViewModel
 
 @Composable
-fun ClientHomePage(
+fun HairDresserProfileScreen(
     token: String,
+    hairdresserId: String,
     onLogout: () -> Unit,
     onHomeClick: () -> Unit,
     onOrdersClick: () -> Unit,
     onProfileClick: () -> Unit,
-    onHairdresserProfileClick: (String) -> Unit,
-    viewModel: ClientHomeViewModel = viewModel()
+    onPostClick: (HairdresserPost) -> Unit,
+    onBookClick: () -> Unit,
+    viewModel: HairDresserProfileViewModel = viewModel()
 ) {
+    LaunchedEffect(hairdresserId) {
+        viewModel.setHairdresserData(hairdresserId)
+    }
+
+    val hairdresserName by remember { derivedStateOf { viewModel.hairdresserName } }
     val posts by remember { derivedStateOf { viewModel.posts } }
 
     val backgroundColor = Color(0xFF1C2526)
@@ -56,57 +56,58 @@ fun ClientHomePage(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .padding(16.dp)
         ) {
             Text(
-                text = "Home",
+                text = hairdresserName,
                 color = whiteColor,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp)
+                    .padding(bottom = 16.dp)
             )
-
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Button(
+                    onClick = onLogout,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = pinkColor,
+                        contentColor = whiteColor
+                    )
+                ) {
+                    Text("Logout")
+                }
+                Button(
+                    onClick = onBookClick,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = pinkColor,
+                        contentColor = whiteColor
+                    )
+                ) {
+                    Text("Book")
+                }
+            }
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f)
-                    .padding(horizontal = 16.dp),
+                    .weight(1f),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(posts) { post ->
-                    Row(
+                    Image(
+                        painter = painterResource(id = post.imageId),
+                        contentDescription = post.serviceName,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { /* Navigate to HairDresserProfileScreen */ },
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Image(
-                            painter = painterResource(id = post.imageId),
-                            contentDescription = "${post.hairdresserName} Post",
-                            modifier = Modifier
-                                .size(100.dp)
-                                .padding(end = 16.dp)
-                        )
-                        Column {
-                            Text(
-                                text = post.hairdresserName,
-                                color = whiteColor,
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = "Profile",
-                                tint = whiteColor,
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .clickable {
-                                        onHairdresserProfileClick(post.hairdresserId)
-                                    }
-                            )
-                        }
-                    }
+                            .height(200.dp)
+                            .clickable { onPostClick(post) }
+                    )
                 }
             }
         }
@@ -126,15 +127,19 @@ fun ClientHomePage(
 
 @Preview(showBackground = true)
 @Composable
-fun ClientHomePagePreview() {
-    val viewModel = ClientHomeViewModel()
-    ClientHomePage(
+fun HairDresserProfileScreenPreview() {
+    val viewModel = HairDresserProfileViewModel().apply {
+        setHairdresserData("hairdresser1")
+    }
+    HairDresserProfileScreen(
         token = "mock_token",
+        hairdresserId = "hairdresser1",
         onLogout = { /* Mock logout */ },
         onHomeClick = { /* Mock home click */ },
         onOrdersClick = { /* Mock orders click */ },
         onProfileClick = { /* Mock profile click */ },
-        onHairdresserProfileClick = { /* Mock hairdresser profile click */ },
+        onPostClick = { /* Mock post click */ },
+        onBookClick = { /* Mock book click */ },
         viewModel = viewModel
     )
 }

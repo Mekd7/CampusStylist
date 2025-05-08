@@ -1,13 +1,8 @@
 package com.example.campusstylistcomposed.ui.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,14 +13,18 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.navigation.NavHostController
 import com.example.campusstylistcomposed.R
 
 @Composable
 fun EditProfile(
     token: String,
     onSaveChanges: (String, String) -> Unit,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    navController: NavHostController
 ) {
     var name by remember { mutableStateOf("Ashley Gram") }
     var bio by remember { mutableStateOf("Hair is my passion\nLocated At AAiT,\ndorm room 306\nBook Now !!!") }
@@ -131,7 +130,7 @@ fun EditProfile(
         Spacer(modifier = Modifier.weight(1f))
 
         Button(
-            onClick = { onSaveChanges(name, bio) },
+            onClick = { onSaveChanges(name, bio); navController.popBackStack() },
             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE0136C)),
             modifier = Modifier
                 .fillMaxWidth()
@@ -147,12 +146,3 @@ fun EditProfile(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewEditProfile() {
-    EditProfile(
-        token = "dummy_token",
-        onSaveChanges = { name, bio -> /* Handle save changes */ },
-        onBackClick = { /* Handle back click */ }
-    )
-}
