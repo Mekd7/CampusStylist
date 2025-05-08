@@ -82,7 +82,7 @@ class UserService(private val userRepository: UserRepository) {
             val updatedUser = user.copy(
                 username = username,
                 bio = bio,
-                profilePicture = profilePicture,
+                profilePicture = profilePicture ?: "/uploads/default.jpg", // Use default if null
                 hasCreatedProfile = true
             )
             userRepository.update(updatedUser)
