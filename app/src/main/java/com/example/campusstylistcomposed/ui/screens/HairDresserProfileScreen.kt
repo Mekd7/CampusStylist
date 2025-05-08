@@ -28,6 +28,7 @@ import com.example.campusstylistcomposed.ui.viewmodel.HairDresserProfileViewMode
 fun HairDresserProfileScreen(
     token: String,
     hairdresserId: String,
+    isOwnProfile: Boolean = false, // New parameter to indicate if it's the hairdresser's own profile
     onLogout: () -> Unit,
     onHomeClick: () -> Unit,
     onOrdersClick: () -> Unit,
@@ -83,14 +84,16 @@ fun HairDresserProfileScreen(
                 ) {
                     Text("Logout")
                 }
-                Button(
-                    onClick = onBookClick,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = pinkColor,
-                        contentColor = whiteColor
-                    )
-                ) {
-                    Text("Book")
+                if (!isOwnProfile) { // Show Book button only for clients
+                    Button(
+                        onClick = onBookClick,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = pinkColor,
+                            contentColor = whiteColor
+                        )
+                    ) {
+                        Text("Book")
+                    }
                 }
             }
             LazyColumn(
@@ -113,7 +116,7 @@ fun HairDresserProfileScreen(
         }
 
         Footer(
-            footerType = FooterType.CLIENT,
+            footerType = if (isOwnProfile) FooterType.HAIRDRESSER else FooterType.CLIENT,
             onHomeClick = onHomeClick,
             onSecondaryClick = onOrdersClick,
             onTertiaryClick = onProfileClick,
@@ -134,6 +137,7 @@ fun HairDresserProfileScreenPreview() {
     HairDresserProfileScreen(
         token = "mock_token",
         hairdresserId = "hairdresser1",
+        isOwnProfile = false,
         onLogout = { /* Mock logout */ },
         onHomeClick = { /* Mock home click */ },
         onOrdersClick = { /* Mock orders click */ },
