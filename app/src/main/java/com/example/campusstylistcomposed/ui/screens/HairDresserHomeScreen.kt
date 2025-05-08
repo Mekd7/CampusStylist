@@ -22,9 +22,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.campusstylistcomposed.ui.viewmodel.HairDresserHomeViewModel
 
 @Composable
-fun HairDresserHomePage(
+fun HairDresserHomeScreen(
     navController: NavHostController,
     token: String,
+    onLogout: () -> Unit,
+    onHomeClick: () -> Unit,
+    onRequestsClick: () -> Unit,
+    onScheduleClick: () -> Unit,
+    onProfileClick: () -> Unit,
     viewModel: HairDresserHomeViewModel = viewModel()
 ) {
     val posts by viewModel.posts.collectAsState()
@@ -81,19 +86,17 @@ fun HairDresserHomePage(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(200.dp)
-                            .clickable {
-                                navController.navigate("hairdresserPostDetail/$token/0/${post.serviceName}/${post.length}/${post.duration}")
-                            }
+                            .clickable { navController.navigate("hairdresserPostDetail/$token/0/${post.serviceName}/${post.length}/${post.duration}") }
                     )
                 }
             }
         }
         Footer(
             footerType = FooterType.HAIRDRESSER,
-            onHomeClick = { navController.navigate("hairdresserHome/$token") },
-            onSecondaryClick = { navController.navigate("myRequests/$token") }, // Fixed to "myRequests"
-            onTertiaryClick = { navController.navigate("manageSchedule/$token") },
-            onProfileClick = { navController.navigate("hairdresserProfile/$token/0") }, // Assuming hairdresserId as 0 or dynamic
+            onHomeClick = onHomeClick,
+            onSecondaryClick = onRequestsClick,
+            onTertiaryClick = onScheduleClick,
+            onProfileClick = onProfileClick,
             modifier = Modifier.align(Alignment.BottomCenter)
         )
     }
