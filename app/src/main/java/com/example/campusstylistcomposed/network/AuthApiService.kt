@@ -2,12 +2,12 @@ package com.example.campusstylistcomposed.network
 
 import com.example.campusstylistcomposed.data.AuthRequest
 import com.example.campusstylistcomposed.data.AuthResponse
-import com.example.campusstylistcomposed.data.UserIdResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 
+// Moved UserIdResponse before ApiService
 data class UserIdResponse(
     val userId: String
 )
