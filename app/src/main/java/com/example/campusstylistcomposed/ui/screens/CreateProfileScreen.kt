@@ -1,5 +1,7 @@
 package com.example.campusstylistcomposed.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -12,6 +14,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -51,12 +54,22 @@ fun CreateProfileScreen(
     onProfileCreated: () -> Unit,
     viewModel: CreateProfileViewModel = viewModel()
 ) {
+    // Image picker launcher
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+        onResult = { uri -> viewModel.onImageSelected(uri) }
+    )
+
     LaunchedEffect(Unit) {
         viewModel.setInitialData(token, isHairdresser)
+        viewModel.initializeImagePicker(imagePickerLauncher)
     }
 
     var name by remember { mutableStateOf(viewModel.name.value) }
     var bio by remember { mutableStateOf(viewModel.bio.value) }
+    val errorMessage by viewModel.errorMessage.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val selectedImageUri by viewModel.selectedImageUri.collectAsState()
 
     val darkBackgroundColor = Color(0xFF222020)
     val pinkColor = Color(0xFFE0136C)
@@ -111,11 +124,14 @@ fun CreateProfileScreen(
                 modifier = Modifier
                     .size(120.dp)
                     .clip(CircleShape)
-                    .background(placeholderGrayColor)
-                    .clickable { /* TODO: Handle image upload */ },
+                    .background(if (selectedImageUri != null) pinkColor else placeholderGrayColor)
+                    .clickable { viewModel.pickImage() },
                 contentAlignment = Alignment.Center
             ) {
-                // Placeholder for profile image
+                if (selectedImageUri != null) {
+                    // Placeholder for displaying the image (requires Coil or Glide)
+                    // Example with Coil: Image(painter = rememberAsyncImagePainter(selectedImageUri), contentDescription = null)
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -125,7 +141,7 @@ fun CreateProfileScreen(
                 color = pinkColor,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Normal,
-                modifier = Modifier.clickable { /* TODO: Handle image upload */ }
+                modifier = Modifier.clickable { viewModel.pickImage() }
             )
 
             Spacer(modifier = Modifier.height(48.dp))
@@ -180,24 +196,39 @@ fun CreateProfileScreen(
                 Divider(color = pinkColor, thickness = 1.dp)
             }
 
-            Spacer(modifier = Modifier.height(64.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            Button(
-                onClick = {
-                    viewModel.createProfile(onSuccess = onProfileCreated)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(30.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = pinkColor)
-            ) {
+            errorMessage?.let {
                 Text(
-                    text = "Create Profile",
-                    color = whiteColor,
+                    text = it,
+                    color = Color.Red,
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Black
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (isLoading) {
+                CircularProgressIndicator(color = pinkColor)
+            } else {
+                Button(
+                    onClick = {
+                        viewModel.createProfile(onSuccess = onProfileCreated)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(30.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = pinkColor)
+                ) {
+                    Text(
+                        text = "Create Profile",
+                        color = whiteColor,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Black
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))

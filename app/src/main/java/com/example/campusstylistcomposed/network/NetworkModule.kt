@@ -1,14 +1,11 @@
 package com.example.campusstylistcomposed.network
 
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.stringPreferencesKey
+import android.content.Context
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -19,16 +16,17 @@ import javax.inject.Singleton
 object NetworkModule {
     @Provides
     @Singleton
-    fun provideOkHttpClient(dataStore: DataStore<Preferences>): OkHttpClient {
-        val tokenKey = stringPreferencesKey("auth_token")
+    fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor { chain ->
-                val original = chain.request()
-                val token = runBlocking {
-                    dataStore.data.firstOrNull()?.get(tokenKey) ?: ""
-                }
-                val request = original.newBuilder()
-                    .header("Authorization", if (token.isNotEmpty()) "Bearer $token" else "")
+                val sharedPreferences = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
+                val token = sharedPreferences.getString("auth_token", null)
+                val request = chain.request().newBuilder()
+                    .apply {
+                        if (token != null) {
+                            addHeader("Authorization", "Bearer $token")
+                        }
+                    }
                     .build()
                 chain.proceed(request)
             }
@@ -39,7 +37,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://172.20.10.7:8080/")
+            .baseUrl("http://172.20.10.7:8080/") // Replace with your backend base URL, e.g., "https://api.campusstylist.com/"
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

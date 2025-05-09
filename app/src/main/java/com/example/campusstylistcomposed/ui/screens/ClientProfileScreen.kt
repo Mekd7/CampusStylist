@@ -6,6 +6,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -17,9 +19,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.ui.layout.ContentScale
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.campusstylistcomposed.ui.components.Footer
 import com.example.campusstylistcomposed.ui.components.FooterType
 import com.example.campusstylistcomposed.R
+import com.example.campusstylistcomposed.ui.viewmodel.ClientProfileViewModel
 
 @Composable
 fun ClientProfileScreen(
@@ -29,11 +33,15 @@ fun ClientProfileScreen(
     onOrdersClick: () -> Unit,
     onProfileClick: () -> Unit,
     navigateToLogin: (String) -> Unit,
-    onEditProfileClick: () -> Unit
+    onEditProfileClick: () -> Unit,
+    viewModel: ClientProfileViewModel = hiltViewModel()
 ) {
     val backgroundColor = Color(0xFF222020)
     val pinkColor = Color(0xFFE0136C)
     val whiteColor = Color.White
+
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
     Box(
         modifier = Modifier
@@ -80,7 +88,8 @@ fun ClientProfileScreen(
                     .height(48.dp)
                     .padding(bottom = 16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = pinkColor, contentColor = whiteColor),
-                shape = CircleShape
+                shape = CircleShape,
+                enabled = !isLoading
             ) {
                 Text("Delete Account", fontSize = 16.sp)
             }
@@ -92,20 +101,35 @@ fun ClientProfileScreen(
                     .height(48.dp)
                     .padding(bottom = 16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = pinkColor, contentColor = whiteColor),
-                shape = CircleShape
+                shape = CircleShape,
+                enabled = !isLoading
             ) {
                 Text("Edit Profile", fontSize = 16.sp)
             }
 
             Button(
-                onClick = { navigateToLogin(token) },
+                onClick = {
+                    viewModel.logout {
+                        onLogout()
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = pinkColor, contentColor = whiteColor),
-                shape = CircleShape
+                shape = CircleShape,
+                enabled = !isLoading
             ) {
                 Text("Log out", fontSize = 16.sp)
+            }
+
+            errorMessage?.let {
+                Text(
+                    text = "Error: $it",
+                    color = whiteColor,
+                    fontSize = 14.sp,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
         }
 

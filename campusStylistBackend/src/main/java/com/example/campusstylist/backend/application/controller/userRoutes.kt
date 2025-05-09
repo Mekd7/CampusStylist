@@ -218,22 +218,14 @@ fun Route.userRoutes(userService: UserService) {
                 call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Server error", "message" to e.message))
             }
         }
+    }
 
-        // Logout (both roles)
-        post("/logout") {
-            try {
-                val principal = call.principal<JWTPrincipal>()
-                val email = principal?.payload?.getClaim("email")?.asString()
-                    ?: return@post call.respond(
-                        HttpStatusCode.Unauthorized,
-                        mapOf("error" to "Unauthorized", "message" to "Invalid token")
-                    )
-                // Invalidate token on client side (JWT is stateless, so client should discard token)
-                call.respond(HttpStatusCode.OK, mapOf("message" to "Logged out successfully"))
-            } catch (e: Exception) {
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Server error", "message" to e.message))
-            }
+    // Logout (both roles, authentication optional)
+    post("/logout") {
+        try {
+            call.respond(HttpStatusCode.OK, mapOf("message" to "Logged out successfully"))
+        } catch (e: Exception) {
+            call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Server error", "message" to e.message))
         }
     }
 }
-
