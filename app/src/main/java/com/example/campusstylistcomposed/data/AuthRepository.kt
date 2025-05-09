@@ -1,47 +1,60 @@
 package com.example.campusstylistcomposed.data.repository
 
-import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
 
-private val Context.dataStore by preferencesDataStore("auth_prefs")
-
-class AuthRepository @Inject constructor(private val context: Context) {
+class AuthRepository @Inject constructor(
+    private val dataStore: DataStore<Preferences> // Inject DataStore instead of Context
+) {
     private val tokenKey = stringPreferencesKey("auth_token")
+    private val roleKey = stringPreferencesKey("user_role")
+    private val userIdKey = stringPreferencesKey("user_id")
 
-    // Use MutableStateFlow to hold the token value
     private val _token = MutableStateFlow<String?>(null)
+    private val _role = MutableStateFlow<String?>(null)
+    private val _userId = MutableStateFlow<String?>(null)
+
     val token: StateFlow<String?> = _token.asStateFlow()
+    val role: StateFlow<String?> = _role.asStateFlow()
+    val userId: StateFlow<String?> = _userId.asStateFlow()
 
     init {
-        // Load the initial token value from DataStore into StateFlow
         kotlinx.coroutines.runBlocking {
-            val initialToken = context.dataStore.data.firstOrNull()?.get(tokenKey)
-            _token.value = initialToken
+            val preferences = dataStore.data.firstOrNull()
+            _token.value = preferences?.get(tokenKey)
+            _role.value = preferences?.get(roleKey)
+            _userId.value = preferences?.get(userIdKey)
         }
     }
 
-    suspend fun saveToken(token: String) {
-        context.dataStore.edit { preferences ->
+    suspend fun saveToken(token: String, role: String, userId: String) {
+        dataStore.edit { preferences ->
             preferences[tokenKey] = token
+            preferences[roleKey] = role
+            preferences[userIdKey] = userId
         }
-        _token.value = token // Update StateFlow
-    }
 
-    fun getToken(): StateFlow<String?> {
-        return token
+        _token.value = token
+        _role.value = role
+        _userId.value = userId
     }
 
     suspend fun clearToken() {
-        context.dataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             preferences.remove(tokenKey)
+            preferences.remove(roleKey)
+            preferences.remove(userIdKey)
         }
-        _token.value = null // Update StateFlow
+
+        _token.value = null
+        _role.value = null
+        _userId.value = null
     }
 }

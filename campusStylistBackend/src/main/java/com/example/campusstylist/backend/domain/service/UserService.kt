@@ -42,9 +42,13 @@ class UserService(private val userRepository: UserRepository) {
             }
             val createdUser = userRepository.create(user)
             logger.debug("User created: email=$email, role=${createdUser.role}")
+            if (createdUser.id == null) {
+                throw IllegalStateException("User ID was not generated during signup")
+            }
             AuthResponse(
                 token = JwtConfig.generateToken(createdUser.email),
                 role = createdUser.role.name,
+                userId = createdUser.id.toString(),
                 hasCreatedProfile = createdUser.hasCreatedProfile
             )
         }
@@ -65,9 +69,14 @@ class UserService(private val userRepository: UserRepository) {
         }
 
         logger.debug("Signin successful: email=$email, role=${user.role}")
+        if (user.id == null) {
+            logger.error("User ID is null for email: $email")
+            return null
+        }
         return AuthResponse(
             token = JwtConfig.generateToken(user.email),
             role = user.role.name,
+            userId = user.id.toString(),
             hasCreatedProfile = user.hasCreatedProfile
         )
     }
@@ -116,8 +125,13 @@ class UserService(private val userRepository: UserRepository) {
 
     fun getUserIdFromToken(token: String): String? {
         return try {
-            JWT.require(HMAC256("your-jwt-secret")).build().verify(token).subject
+            val email = JwtConfig.verifyToken(token)
+            if (email == null) {
+                logger.error("Failed to verify token: Invalid or missing email claim")
+            }
+            email
         } catch (e: Exception) {
+            logger.error("Failed to verify token: ${e.message}")
             null
         }
     }

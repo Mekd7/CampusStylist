@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 data class AuthResponse(
     val token: String,
     val role: String,
+    val userId: String, // Added userId
     val hasCreatedProfile: Boolean
 )

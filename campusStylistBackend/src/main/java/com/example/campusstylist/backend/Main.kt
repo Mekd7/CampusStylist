@@ -2,7 +2,6 @@ package com.example.campusstylist.backend
 
 import com.example.campusstylist.backend.application.controller.*
 import com.example.campusstylist.backend.domain.model.Service
-import com.example.campusstylist.backend.domain.service.UserService
 import com.example.campusstylist.backend.domain.service.*
 import com.example.campusstylist.backend.infrastructure.DatabaseConfig
 import com.example.campusstylist.backend.infrastructure.repository.*
@@ -35,7 +34,13 @@ fun Application.module() {
     val logger = LoggerFactory.getLogger("MainKt")
 
     // Initialize database
-    DatabaseConfig.init()
+    try {
+        DatabaseConfig.init()
+        logger.info("Database initialized successfully.")
+    } catch (e: Exception) {
+        logger.error("Failed to initialize database: ${e.message}", e)
+        throw RuntimeException("Cannot start application without database connection", e)
+    }
 
     // Create tables if missing
     transaction {
@@ -54,8 +59,15 @@ fun Application.module() {
 
     // Handle exceptions
     install(StatusPages) {
+        exception<IllegalArgumentException> { call, cause ->
+            logger.warn("Validation error: ${cause.message}", cause)
+            call.respond(
+                HttpStatusCode.BadRequest,
+                mapOf("error" to "Bad Request", "message" to cause.message)
+            )
+        }
         exception<Throwable> { call, cause ->
-            logger.error("Unhandled error", cause)
+            logger.error("Unhandled error: ${cause.message}", cause)
             call.respond(
                 HttpStatusCode.InternalServerError,
                 mapOf("error" to "Internal Server Error", "message" to cause.message)
@@ -64,15 +76,17 @@ fun Application.module() {
     }
 
     // Configure JWT authentication
-    install(Authentication, JwtConfig.configureJwt())
+    install(Authentication) {
+        JwtConfig.configureJwt().invoke(this)
+    }
 
-    // Initialize services
+    // Initialize repositories and services
     val userRepository = UserRepository()
     val postRepository = PostRepository()
     val requestRepository = RequestRepository()
     val bookingRepository = BookingRepository()
     val serviceRepository = ServiceRepository()
-    val userService = UserService(userRepository) // Correct instantiation
+    val userService = UserService(userRepository)
     val postService = PostService(postRepository)
     val requestService = RequestService(requestRepository)
     val bookingService = BookingService(bookingRepository)
@@ -99,13 +113,19 @@ fun Application.module() {
         }
     } catch (e: Exception) {
         logger.error("Failed to seed Services table: ${e.message}", e)
-        throw RuntimeException("Failed to initialize application due to seeding error", e)
+        // Optionally, proceed with a warning instead of crashing
+        logger.warn("Proceeding without seeding Services table due to error.")
     }
 
     // Configure routing
     routing {
         // Serve static files from the uploads directory
-        staticFiles("/uploads", File("uploads")) {
+        val uploadsDir = File("uploads")
+        if (!uploadsDir.exists()) {
+            uploadsDir.mkdirs()
+            logger.info("Created uploads directory at ${uploadsDir.absolutePath}")
+        }
+        staticFiles("/uploads", uploadsDir) {
             enableAutoHeadResponse()
         }
 

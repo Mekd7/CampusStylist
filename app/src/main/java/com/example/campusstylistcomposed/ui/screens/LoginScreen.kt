@@ -19,28 +19,38 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel // Import for hiltViewModel
 import com.example.campusstylistcomposed.ui.viewmodel.LoginViewModel
 
 @Composable
 fun LoginScreen(
     onNavigateToSignUp: () -> Unit,
-    onLoginSuccess: (String, Boolean, String) -> Unit // Updated to include userId
+    onLoginSuccess: (String, Boolean, String) -> Unit
 ) {
-    val viewModel: LoginViewModel = viewModel()
+    val viewModel: LoginViewModel = hiltViewModel() // Changed from viewModel() to hiltViewModel()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val errorMessage by viewModel.errorMessage.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
 
-    val pinkColor = Color(0xFFE0136C)
-    val darkColor = Color(0xFF222020)
-    val grayColor = Color(0xFFA7A3A3)
+    val token by viewModel.token.collectAsState()
+    val role by viewModel.role.collectAsState()
+    val userId by viewModel.userId.collectAsState()
+
+    var autoNavigated by remember { mutableStateOf(false) }
+
+    LaunchedEffect(token) {
+        if (!token.isNullOrEmpty() && !autoNavigated) {
+            autoNavigated = true
+            val isHairdresser = role?.uppercase() == "HAIRDRESSER"
+            onLoginSuccess(token!!, isHairdresser ?: false, userId ?: token.hashCode().toString())
+        }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(darkColor)
+            .background(Color(0xFF222020))
     ) {
         Canvas(
             modifier = Modifier
@@ -62,10 +72,7 @@ fun LoginScreen(
                 close()
             }
 
-            drawPath(
-                path = wavePath,
-                color = pinkColor
-            )
+            drawPath(path = wavePath, color = Color(0xFFE0136C))
         }
 
         Column(
@@ -79,11 +86,7 @@ fun LoginScreen(
 
             Text(
                 text = "Welcome back",
-                style = TextStyle(
-                    color = Color.White,
-                    fontSize = 40.sp,
-                    fontWeight = FontWeight.Bold
-                ),
+                style = TextStyle(color = Color.White, fontSize = 40.sp, fontWeight = FontWeight.Bold),
                 modifier = Modifier.align(Alignment.Start)
             )
 
@@ -91,36 +94,23 @@ fun LoginScreen(
 
             Text(
                 text = "Login to CampusStylist",
-                style = TextStyle(
-                    color = grayColor,
-                    fontSize = 18.sp
-                ),
-                modifier = Modifier
-                    .padding(bottom = 24.dp)
-                    .align(Alignment.Start)
+                style = TextStyle(color = Color(0xFFA7A3A3), fontSize = 18.sp),
+                modifier = Modifier.padding(bottom = 24.dp).align(Alignment.Start)
             )
 
             Text(
                 text = "Email",
-                style = TextStyle(
-                    color = Color.White,
-                    fontSize = 18.sp
-                ),
-                modifier = Modifier
-                    .padding(bottom = 8.dp)
-                    .align(Alignment.Start)
+                style = TextStyle(color = Color.White, fontSize = 18.sp),
+                modifier = Modifier.padding(bottom = 8.dp).align(Alignment.Start)
             )
 
             TextField(
                 value = email,
                 onValueChange = { email = it; viewModel.updateEmail(it) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Black,
                     unfocusedContainerColor = Color.Black,
-                    disabledContainerColor = Color.Black,
                     cursorColor = Color.White,
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
@@ -135,25 +125,17 @@ fun LoginScreen(
 
             Text(
                 text = "Password",
-                style = TextStyle(
-                    color = Color.White,
-                    fontSize = 18.sp
-                ),
-                modifier = Modifier
-                    .padding(bottom = 8.dp)
-                    .align(Alignment.Start)
+                style = TextStyle(color = Color.White, fontSize = 18.sp),
+                modifier = Modifier.padding(bottom = 8.dp).align(Alignment.Start)
             )
 
             TextField(
                 value = password,
                 onValueChange = { password = it; viewModel.updatePassword(it) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Black,
                     unfocusedContainerColor = Color.Black,
-                    disabledContainerColor = Color.Black,
                     cursorColor = Color.White,
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White,
@@ -168,22 +150,15 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             if (isLoading) {
-                CircularProgressIndicator(color = pinkColor)
+                CircularProgressIndicator(color = Color(0xFFE0136C))
             } else {
                 Button(
                     onClick = { viewModel.login(onLoginSuccess) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = pinkColor
-                    ),
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE0136C)),
                     shape = RoundedCornerShape(50)
                 ) {
-                    Text(
-                        text = "Login",
-                        fontSize = 18.sp
-                    )
+                    Text(text = "Login", fontSize = 18.sp)
                 }
             }
 
@@ -192,10 +167,7 @@ fun LoginScreen(
             errorMessage?.let {
                 Text(
                     text = it,
-                    style = TextStyle(
-                        color = Color.Red,
-                        fontSize = 16.sp
-                    ),
+                    style = TextStyle(color = Color.Red, fontSize = 16.sp),
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
             }
@@ -207,20 +179,13 @@ fun LoginScreen(
             ) {
                 Text(
                     text = "Don't have an account? ",
-                    style = TextStyle(
-                        color = grayColor,
-                        fontSize = 16.sp
-                    )
+                    style = TextStyle(color = Color(0xFFA7A3A3), fontSize = 16.sp)
                 )
 
                 TextButton(onClick = onNavigateToSignUp) {
                     Text(
                         text = "SIGN UP",
-                        style = TextStyle(
-                            color = pinkColor,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        style = TextStyle(color = Color(0xFFE0136C), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     )
                 }
             }

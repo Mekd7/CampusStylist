@@ -1,21 +1,40 @@
 package com.example.campusstylistcomposed.di
 
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
+import com.example.campusstylistcomposed.domain.AddToBookingsUseCase
 import com.example.campusstylistcomposed.domain.DeclineRequestUseCase
 import com.example.campusstylistcomposed.domain.GetRequestsUseCase
 import com.example.campusstylistcomposed.domain.RequestRepository
 import com.example.campusstylistcomposed.infrastructure.RequestApiService
 import com.example.campusstylistcomposed.infrastructure.RequestRepositoryImpl
-import com.example.campusstylistcomposed.domain.AddToBookingsUseCase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 import retrofit2.Retrofit
 
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("auth_prefs")
+
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+    @Provides
+    @Singleton
+    fun provideContext(@ApplicationContext context: Context): Context {
+        return context
+    }
+
+    @Provides
+    @Singleton
+    fun provideDataStore(@ApplicationContext context: Context): DataStore<Preferences> {
+        return context.dataStore
+    }
+
     @Provides
     @Singleton
     fun provideRequestApiService(retrofit: Retrofit): RequestApiService {

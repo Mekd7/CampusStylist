@@ -19,15 +19,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel // Add this import
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.campusstylistcomposed.ui.viewmodel.SignUpViewModel
 
 @Composable
 fun SignUpScreen(
     onNavigateToLogin: () -> Unit,
-    onSignupSuccess: (String, Boolean, Long?) -> Unit
+    onSignupSuccess: (String, Boolean, String?) -> Unit // Changed Long? to String?
 ) {
-    val viewModel: SignUpViewModel = hiltViewModel() // Use hiltViewModel() instead of viewModel()
+    val viewModel: SignUpViewModel = hiltViewModel()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val selectedRole by viewModel.isHairdresser.collectAsState()

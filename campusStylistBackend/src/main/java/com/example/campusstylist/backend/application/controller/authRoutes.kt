@@ -11,7 +11,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.SerializationException
 import org.slf4j.LoggerFactory
-import java.sql.SQLException
 
 fun Route.authRoutes(userService: UserService) {
     val logger = LoggerFactory.getLogger("AuthRoutes")
@@ -22,13 +21,11 @@ fun Route.authRoutes(userService: UserService) {
                 val request = call.receive<AuthRequest>()
                 logger.debug("Received register request: $request")
 
-                // Validate role
                 if (request.role.uppercase() !in listOf("CLIENT", "HAIRDRESSER")) {
                     logger.warn("Invalid role: ${request.role}")
                     call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid role", "message" to "Role must be CLIENT or HAIRDRESSER"))
                     return@post
                 }
-                // Validate email and password
                 if (request.email.isBlank() || request.password.isBlank()) {
                     logger.warn("Empty email or password: email=${request.email}")
                     call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid input", "message" to "Email and password are required"))
@@ -42,9 +39,6 @@ fun Route.authRoutes(userService: UserService) {
             } catch (e: IllegalArgumentException) {
                 logger.warn("Signup failed: ${e.message}")
                 call.respond(HttpStatusCode.Conflict, mapOf("error" to "Conflict", "message" to (e.message ?: "Email already exists")))
-            } catch (e: SQLException) {
-                logger.error("Database error: ${e.message}", e)
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Database error", "message" to e.message))
             } catch (e: Exception) {
                 logger.error("Unexpected error: ${e.message}", e)
                 call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Server error", "message" to e.message))
@@ -53,10 +47,9 @@ fun Route.authRoutes(userService: UserService) {
 
         post("/login") {
             try {
-                val request = call.receive<LoginRequest>()  // <-- Updated type
+                val request = call.receive<LoginRequest>()
                 logger.debug("Received login request: email=${request.email}")
 
-                // Validate email and password
                 if (request.email.isBlank() || request.password.isBlank()) {
                     logger.warn("Empty email or password: email=${request.email}")
                     call.respond(
@@ -79,21 +72,40 @@ fun Route.authRoutes(userService: UserService) {
             } catch (e: SerializationException) {
                 logger.error("Serialization error: ${e.message}", e)
                 call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid JSON", "message" to e.message))
-            } catch (e: SQLException) {
-                logger.error("Database error: ${e.message}", e)
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Database error", "message" to e.message))
             } catch (e: Exception) {
                 logger.error("Unexpected error: ${e.message}", e)
                 call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Server error", "message" to e.message))
             }
         }
+
         get("/user/me") {
-            val token = call.request.header("Authorization")?.removePrefix("Bearer ") ?: ""
-            val userId = userService.getUserIdFromToken(token)
-            if (userId != null) {
-                call.respond(HttpStatusCode.OK, mapOf("userId" to userId))
-            } else {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Unauthorized", "message" to "Invalid token"))
+            try {
+                val token = call.request.header("Authorization")?.removePrefix("Bearer ") ?: run {
+                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Missing token"))
+                    return@get
+                }
+
+                val email = userService.getUserIdFromToken(token) ?: run {
+                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Invalid token"))
+                    return@get
+                }
+
+                val user = userService.findByEmail(email) ?: run {
+                    call.respond(HttpStatusCode.NotFound, mapOf("error" to "User not found"))
+                    return@get
+                }
+
+                val response = AuthResponse(
+                    token = token,  // Assuming you want to return the token as part of the response as well
+                    role = user.role.name,
+                    userId = user.id.toString(),
+                    hasCreatedProfile = user.hasCreatedProfile
+                )
+
+                call.respond(HttpStatusCode.OK, response)
+            } catch (e: Exception) {
+                logger.error("Error fetching user profile: ${e.message}", e)
+                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Server error", "message" to e.message))
             }
         }
 
