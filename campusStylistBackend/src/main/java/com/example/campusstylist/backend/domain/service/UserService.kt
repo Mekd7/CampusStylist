@@ -6,11 +6,10 @@ import com.example.campusstylist.backend.domain.model.Role
 import com.example.campusstylist.backend.domain.model.User
 import com.example.campusstylist.backend.infrastructure.repository.UserRepository
 import com.example.campusstylist.backend.infrastructure.security.JwtConfig
-import com.sun.org.apache.xml.internal.security.algorithms.JCEMapper
-import org.jetbrains.exposed.sql.transactions.transaction
 import org.mindrot.jbcrypt.BCrypt
 import org.slf4j.LoggerFactory
 import com.auth0.jwt.algorithms.Algorithm.HMAC256
+import org.jetbrains.exposed.sql.transactions.transaction
 
 class UserService(private val userRepository: UserRepository) {
     private val logger = LoggerFactory.getLogger(UserService::class.java)
@@ -85,7 +84,7 @@ class UserService(private val userRepository: UserRepository) {
             val updatedUser = user.copy(
                 username = username,
                 bio = bio,
-                profilePicture = profilePicture ?: "/uploads/default.jpg", // Use default if null
+                profilePicture = profilePicture ?: "/uploads/default.jpg",
                 hasCreatedProfile = true
             )
             userRepository.update(updatedUser)
@@ -114,9 +113,10 @@ class UserService(private val userRepository: UserRepository) {
     private fun verifyPassword(rawPassword: String, hashedPassword: String): Boolean {
         return BCrypt.checkpw(rawPassword, hashedPassword)
     }
+
     fun getUserIdFromToken(token: String): String? {
         return try {
-            JWT.require(JCEMapper.Algorithm.HMAC256("your-jwt-secret")).build().verify(token).subject
+            JWT.require(HMAC256("your-jwt-secret")).build().verify(token).subject
         } catch (e: Exception) {
             null
         }
