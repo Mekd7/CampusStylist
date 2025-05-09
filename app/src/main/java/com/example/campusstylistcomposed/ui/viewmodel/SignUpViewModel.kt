@@ -2,9 +2,9 @@ package com.example.campusstylistcomposed.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.campusstylistcomposed.data.AuthRepository
+import com.example.campusstylistcomposed.data.AuthRequest // Changed from SignUpRequest to AuthRequest
+import com.example.campusstylistcomposed.data.repository.AuthRepository // Added import for AuthRepository
 import com.example.campusstylistcomposed.network.ApiService
-import com.example.campusstylistcomposed.network.SignUpRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -46,7 +46,7 @@ class SignUpViewModel @Inject constructor(
 
             try {
                 val role = if (_isHairdresser.value) "HAIRDRESSER" else "CLIENT"
-                val request = SignUpRequest(
+                val request = AuthRequest(
                     email = _email.value,
                     password = _password.value,
                     role = role
