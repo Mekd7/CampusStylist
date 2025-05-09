@@ -26,4 +26,5 @@ dependencies {
     implementation(libs.java.jwt)
     testImplementation(libs.junit)
     testImplementation(libs.ktor.server.tests)
+    implementation("com.auth0:java-jwt:4.4.0")
 }

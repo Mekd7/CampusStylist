@@ -87,6 +87,15 @@ fun Route.authRoutes(userService: UserService) {
                 call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Server error", "message" to e.message))
             }
         }
+        get("/user/me") {
+            val token = call.request.header("Authorization")?.removePrefix("Bearer ") ?: ""
+            val userId = userService.getUserIdFromToken(token)
+            if (userId != null) {
+                call.respond(HttpStatusCode.OK, mapOf("userId" to userId))
+            } else {
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Unauthorized", "message" to "Invalid token"))
+            }
+        }
 
     }
 }

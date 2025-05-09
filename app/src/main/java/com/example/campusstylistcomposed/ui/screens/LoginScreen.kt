@@ -25,7 +25,7 @@ import com.example.campusstylistcomposed.ui.viewmodel.LoginViewModel
 @Composable
 fun LoginScreen(
     onNavigateToSignUp: () -> Unit,
-    onLoginSuccess: (String, Boolean) -> Unit
+    onLoginSuccess: (String, Boolean, String) -> Unit // Updated to include userId
 ) {
     val viewModel: LoginViewModel = viewModel()
     var email by remember { mutableStateOf("") }

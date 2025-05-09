@@ -37,13 +37,13 @@ fun SetupNavGraph(navController: NavHostController) {
         composable("login") {
             LoginScreen(
                 onNavigateToSignUp = { navController.navigate("signup") },
-                onLoginSuccess = { token, isHairdresser ->
+                onLoginSuccess = { token, isHairdresser, userId ->
                     if (isHairdresser) {
-                        navController.navigate("hairdresserHome/$token") {
+                        navController.navigate("hairdresserHome/$userId") {
                             popUpTo("login") { inclusive = true }
                         }
                     } else {
-                        navController.navigate("clientHome/$token") {
+                        navController.navigate("clientHome/$userId") {
                             popUpTo("login") { inclusive = true }
                         }
                     }
@@ -137,7 +137,7 @@ fun SetupNavGraph(navController: NavHostController) {
                 onHomeClick = { /* Already on home */ },
                 onRequestsClick = { navController.navigate("myRequests/$token") },
                 onScheduleClick = { navController.navigate("manageSchedule/$token") },
-                onProfileClick = { navController.navigate("hairdresserProfile/$token/$token") }, // Navigate to profile on profile icon click
+                onProfileClick = { navController.navigate("hairdresserProfile/$token/$token") },
                 viewModel = hairDresserHomeViewModel
             )
         }
