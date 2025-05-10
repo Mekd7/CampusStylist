@@ -36,10 +36,10 @@ class BookingViewModel @Inject constructor(
     val navigateToOrders: Boolean get() = _navigateToOrders.value
 
     private val _errorMessage = mutableStateOf<String?>(null)
-    val errorMessage: State<String?> = _errorMessage // Expose as State
+    val errorMessage: State<String?> = _errorMessage
 
     private val _isLoading = mutableStateOf(false)
-    val isLoading: State<Boolean> = _isLoading // Expose as State
+    val isLoading: State<Boolean> = _isLoading
 
     private val _hairstylistId = mutableStateOf<Long?>(null)
     val hairstylistId: Long? get() = _hairstylistId.value
@@ -109,6 +109,26 @@ class BookingViewModel @Inject constructor(
         }
     }
 
+    fun fetchOrders(token: String) {
+        viewModelScope.launch {
+            try {
+                val userProfile = apiService.getUserProfile("Bearer $token")
+                val clientId = userProfile.id.toLong() // Ensure this is converted to Long
+                val orders = apiService.getBookingsByUserId(token, clientId) // Pass clientId as Long
+                _orders.clear()
+                _orders.addAll(orders.map { booking ->
+                    Order(
+                        hairdresser = "Hairdresser ${booking.hairstylistId}",
+                        service = booking.service,
+                        status = booking.status
+                    )
+                })
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to load orders: ${e.message}"
+            }
+        }
+    }
+
     private fun checkAvailability(date: Date) {
         viewModelScope.launch {
             try {
@@ -138,10 +158,5 @@ class BookingViewModel @Inject constructor(
 
     fun onNavigated() {
         _navigateToOrders.value = false
-    }
-
-    fun setOrdersForPreview(orders: List<Order>) {
-        _orders.clear()
-        _orders.addAll(orders)
     }
 }

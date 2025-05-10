@@ -232,7 +232,7 @@ fun SetupNavGraph(navController: NavHostController) {
                 onHomeClick = { navController.navigate("clientHome/$token") },
                 onOrdersClick = { /* Already on orders */ },
                 onProfileClick = { navController.navigate("clientProfile/$token") },
-                viewModel = viewModel()
+                viewModel = hiltViewModel()
             )
         }
         composable(
@@ -313,22 +313,22 @@ fun SetupNavGraph(navController: NavHostController) {
             )
         }
         composable(
-            "booking/{token}/{hairstylistId}", // Added hairstylistId to the route
+            "booking/{token}/{hairstylistId}",
             arguments = listOf(
                 navArgument("token") { defaultValue = "" },
-                navArgument("hairstylistId") { defaultValue = "" } // Add argument for hairstylistId
+                navArgument("hairstylistId") { defaultValue = "" }
             )
         ) { backStackEntry ->
             val token = backStackEntry.arguments?.getString("token") ?: ""
-            val hairstylistId = backStackEntry.arguments?.getString("hairstylistId")?.toLongOrNull() // Extract hairstylistId
+            val hairstylistId = backStackEntry.arguments?.getString("hairstylistId")?.toLongOrNull()
             BookingScreen(
                 token = token,
-                hairstylistId = hairstylistId, // Pass to BookingScreen
+                hairstylistId = hairstylistId,
                 onBookingConfirmed = { navController.navigate("orders/$token") },
                 onHomeClick = { navController.navigate("clientHome/$token") },
                 onOrdersClick = { navController.navigate("orders/$token") },
                 onProfileClick = { navController.navigate("clientProfile/$token") },
-                viewModel = viewModel<BookingViewModel>()
+                viewModel = hiltViewModel()
             )
         }
         composable(

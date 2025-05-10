@@ -53,4 +53,11 @@ interface ApiService {
         @Query("hairstylistId") hairstylistId: Long,
         @Query("date") date: String
     ): List<Booking>
+
+    @GET("bookings/{userId}")
+    suspend fun getBookingsByUserId(
+        @Header("Authorization") token: String,
+        @Query("userId") userId: Long // Ensure this is Long, not String
+    ): List<Booking>
 }
+

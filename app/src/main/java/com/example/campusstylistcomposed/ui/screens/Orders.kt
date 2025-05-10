@@ -17,13 +17,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.compose.hiltViewModel
 import com.example.campusstylistcomposed.R
 import com.example.campusstylistcomposed.ui.viewmodel.BookingViewModel
 import com.example.campusstylistcomposed.ui.components.Footer
 import com.example.campusstylistcomposed.ui.components.FooterType
-
 
 @Composable
 fun OrderScreen(
@@ -32,16 +30,17 @@ fun OrderScreen(
     onHomeClick: () -> Unit,
     onOrdersClick: () -> Unit,
     onProfileClick: () -> Unit,
-    viewModel: BookingViewModel = viewModel()
+    viewModel: BookingViewModel = hiltViewModel() // Use HiltViewModel for dependency injection
 ) {
-    // Observe the orders list to ensure recomposition
+    LaunchedEffect(Unit) {
+        viewModel.fetchOrders(token) // Fetch orders when the screen is displayed
+    }
+
     val orders by remember { derivedStateOf { viewModel.orders } }
 
-    // Colors matching the screenshot
     val backgroundColor = Color(0xFF1C2526)
     val pinkColor = Color(0xFFFF4081)
     val whiteColor = Color.White
-    val blackColor = Color.Black
 
     Box(
         modifier = Modifier
@@ -84,7 +83,7 @@ fun OrderScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Hair dresser",
+                    text = "Hairdresser",
                     color = whiteColor,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
@@ -162,27 +161,4 @@ fun OrderScreen(
                 .fillMaxWidth()
         )
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun OrderScreenPreview() {
-    val viewModel = BookingViewModel().apply {
-        // Use the helper method to set mock orders
-        setOrdersForPreview(
-            listOf(
-                Order(hairdresser = "Hairdresser 1", service = "Braid", status = "APPROVED"),
-                Order(hairdresser = "Hairdresser 2", service = "Weave", status = "PENDING")
-            )
-        )
-    }
-
-    OrderScreen(
-        token = "mock_token",
-        onBackClick = { /* Mock back click */ },
-        onHomeClick = { /* Mock home click */ },
-        onOrdersClick = { /* Mock orders click */ },
-        onProfileClick = { /* Mock profile click */ },
-        viewModel = viewModel
-    )
 }
