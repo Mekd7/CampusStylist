@@ -26,6 +26,7 @@ class BookingRepository {
                 it[price] = booking.price
                 it[date] = booking.date
                 it[status] = booking.status
+                it[username] = booking.username // Added to match table schema
             } get Bookings.id
             booking.copy(id = id)
         } catch (e: PSQLException) {
@@ -49,7 +50,8 @@ class BookingRepository {
                         service = it[Bookings.service],
                         price = it[Bookings.price],
                         date = it[Bookings.date],
-                        status = it[Bookings.status]
+                        status = it[Bookings.status],
+                        username = it[Bookings.username] // Added to match table schema
                     )
                 }
         } catch (e: PSQLException) {
@@ -70,7 +72,8 @@ class BookingRepository {
                         service = it[Bookings.service],
                         price = it[Bookings.price],
                         date = it[Bookings.date],
-                        status = it[Bookings.status]
+                        status = it[Bookings.status],
+                        username = it[Bookings.username] // Added to match table schema
                     )
                 }
         } catch (e: PSQLException) {
@@ -88,6 +91,7 @@ class BookingRepository {
                     it[price] = booking.price
                     it[date] = booking.date
                     it[status] = booking.status
+                    it[username] = booking.username // Added to match table schema
                 }
                 if (updatedRows > 0) {
                     logger.info("Booking with ID: $it updated successfully.")

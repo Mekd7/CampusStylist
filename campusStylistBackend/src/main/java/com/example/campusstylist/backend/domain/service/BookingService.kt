@@ -22,6 +22,16 @@ class BookingService(private val bookingRepository: BookingRepository) {
         }
     }
 
+    fun getByHairstylistIdAndDate(hairstylistId: Long, date: String): List<Booking> {
+        return transaction {
+            try {
+                bookingRepository.findByHairstylistIdAndDate(hairstylistId, date)
+            } catch (e: Exception) {
+                throw IllegalStateException("Failed to fetch bookings for hairstylist $hairstylistId on $date: ${e.message}", e)
+            }
+        }
+    }
+
     fun update(booking: Booking): Boolean {
         return transaction {
             bookingRepository.update(booking)

@@ -44,6 +44,22 @@ fun Route.bookingRoutes(bookingService: BookingService, userService: UserService
             }
         }
 
+        get("/bookings") {
+            try {
+                val hairstylistId = call.request.queryParameters["hairstylistId"]?.toLongOrNull() ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid input", "message" to "Hairstylist ID is required"))
+                val date = call.request.queryParameters["date"] ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid input", "message" to "Date is required"))
+                val principal = call.principal<JWTPrincipal>()
+                val email = principal?.payload?.getClaim("email")?.asString() ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Unauthorized", "message" to "Invalid token"))
+                val user = userService.findByEmail(email) ?: return@get call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "Unauthorized", "message" to "User not found"))
+                val bookings = bookingService.getByHairstylistIdAndDate(hairstylistId, date)
+                call.respond(bookings)
+            } catch (e: SQLException) {
+                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Database error", "message" to e.message))
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Server error", "message" to e.message))
+            }
+        }
+
         get("/bookings/{userId}") {
             try {
                 val userId = call.parameters["userId"]?.toLongOrNull() ?: return@get call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid input", "message" to "Invalid user ID"))
@@ -87,6 +103,5 @@ fun Route.bookingRoutes(bookingService: BookingService, userService: UserService
                 call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Server error", "message" to e.message))
             }
         }
-
     }
 }

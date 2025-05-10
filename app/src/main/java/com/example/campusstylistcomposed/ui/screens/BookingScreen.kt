@@ -31,13 +31,17 @@ import com.example.campusstylistcomposed.ui.viewmodel.BookingViewModel
 @Composable
 fun BookingScreen(
     token: String,
+    hairstylistId: Long?,
     onBookingConfirmed: () -> Unit,
     onHomeClick: () -> Unit,
     onOrdersClick: () -> Unit,
     onProfileClick: () -> Unit,
     viewModel: BookingViewModel = viewModel()
 ) {
-    // Observe navigation signal
+    LaunchedEffect(Unit) {
+        viewModel.initialize(token, hairstylistId)
+    }
+
     val navigateToOrders by remember { derivedStateOf { viewModel.navigateToOrders } }
     LaunchedEffect(navigateToOrders) {
         if (navigateToOrders) {
@@ -46,21 +50,26 @@ fun BookingScreen(
         }
     }
 
-    // State for the list of services
     val services = remember {
         listOf(
-            Service("Braid", "30Birr", R.drawable.braid),
-            Service("Paystra", "150Birr", R.drawable.straight),
-            Service("Weave", "80Birr", R.drawable.braid),
-            Service("Relaxer", "120Birr", R.drawable.straight),
+            Service("Basic Haircut", "200.0 Birr", R.drawable.basicHairCut),
+            Service("Layered Cut", "300.0 Birr", R.drawable.LayeredCut),
+            Service("Braids", "500.0 Birr", R.drawable.braid),
+            Service("Cornrows", "600.0 Birr", R.drawable.cornRows),
+            Service("Updo", "400.0 Birr", R.drawable.updo),
+            Service("Hair Coloring", "800.0 Birr", R.drawable.hairColoring),
+            Service("Hair Treatment", "700.0 Birr", R.drawable.hairTreatment),
+            Service("Extensions", "1200.0 Birr", R.drawable.Extensions)
         )
     }
 
-    // Colors matching the screenshot
     val backgroundColor = Color(0xFF1C2526)
     val pinkColor = Color(0xFFFF4081)
     val whiteColor = Color.White
     val blackColor = Color.Black
+
+    val errorMessage by viewModel.errorMessage // Now works with State<String?>
+    val isLoading by viewModel.isLoading // Now works with State<Boolean>
 
     Box(
         modifier = Modifier
@@ -70,7 +79,7 @@ fun BookingScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 16.dp, bottom = 80.dp), // Add bottom padding to account for footer
+                .padding(top = 16.dp, bottom = 80.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
@@ -182,34 +191,48 @@ fun BookingScreen(
                         modifier = Modifier.padding(top = 4.dp)
                     )
 
-                    Button(
-                        onClick = { viewModel.confirmBooking() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = blackColor,
-                            contentColor = whiteColor
-                        )
-                    ) {
-                        Text(
-                            text = "Confirm Booking",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                    if (isLoading) {
+                        CircularProgressIndicator(color = whiteColor)
+                    } else {
+                        Button(
+                            onClick = { viewModel.confirmBooking(token) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 16.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = blackColor,
+                                contentColor = whiteColor
+                            )
+                        ) {
+                            Text(
+                                text = "Confirm Booking",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp)) // Add gap between confirm button and footer
+                Spacer(modifier = Modifier.height(16.dp))
             } else {
                 Spacer(modifier = Modifier.height(16.dp))
             }
+
+            errorMessage?.let { message ->
+                Text(
+                    text = message,
+                    color = Color.Red,
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+            }
         }
 
+        // Footer (assumed to be defined in com.example.campusstylistcomposed.ui.components)
         Footer(
             footerType = FooterType.CLIENT,
             onHomeClick = onHomeClick,
             onSecondaryClick = onOrdersClick,
-            onTertiaryClick = onProfileClick,
+            onTertiaryClick = onProfileClick, // Assuming onTertiaryClick and onProfileClick are the same action
             onProfileClick = onProfileClick,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
