@@ -302,22 +302,28 @@ fun SetupNavGraph(navController: NavHostController) {
             )
         ) { backStackEntry ->
             val token = backStackEntry.arguments?.getString("token") ?: ""
+            val hairdresserId = backStackEntry.arguments?.getString("hairdresserId") ?: ""
             ProfileVisitScreen(
                 token = token,
                 onHomeClick = { navController.navigate("clientHome/$token") },
                 onOrdersClick = { navController.navigate("orders/$token") },
                 onProfileClick = { navController.navigate("clientProfile/$token") },
-                onBookClick = { navController.navigate("booking/$token") },
+                onBookClick = { navController.navigate("booking/$token/$hairdresserId") }, // Pass hairdresserId
                 navController = { route -> navController.navigate(route) }
             )
         }
         composable(
-            "booking/{token}",
-            arguments = listOf(navArgument("token") { defaultValue = "" })
+            "booking/{token}/{hairstylistId}", // Added hairstylistId to the route
+            arguments = listOf(
+                navArgument("token") { defaultValue = "" },
+                navArgument("hairstylistId") { defaultValue = "" } // Add argument for hairstylistId
+            )
         ) { backStackEntry ->
             val token = backStackEntry.arguments?.getString("token") ?: ""
+            val hairstylistId = backStackEntry.arguments?.getString("hairstylistId")?.toLongOrNull() // Extract hairstylistId
             BookingScreen(
                 token = token,
+                hairstylistId = hairstylistId, // Pass to BookingScreen
                 onBookingConfirmed = { navController.navigate("orders/$token") },
                 onHomeClick = { navController.navigate("clientHome/$token") },
                 onOrdersClick = { navController.navigate("orders/$token") },

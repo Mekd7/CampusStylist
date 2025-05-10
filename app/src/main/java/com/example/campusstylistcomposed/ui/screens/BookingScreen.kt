@@ -52,14 +52,14 @@ fun BookingScreen(
 
     val services = remember {
         listOf(
-            Service("Basic Haircut", "200.0 Birr", R.drawable.basicHairCut),
-            Service("Layered Cut", "300.0 Birr", R.drawable.LayeredCut),
+            Service("Basic Haircut", "200.0 Birr", R.drawable.basichaircut),
+            Service("Layered Cut", "300.0 Birr", R.drawable.layeredcut),
             Service("Braids", "500.0 Birr", R.drawable.braid),
-            Service("Cornrows", "600.0 Birr", R.drawable.cornRows),
+            Service("Cornrows", "600.0 Birr", R.drawable.cornrows),
             Service("Updo", "400.0 Birr", R.drawable.updo),
-            Service("Hair Coloring", "800.0 Birr", R.drawable.hairColoring),
-            Service("Hair Treatment", "700.0 Birr", R.drawable.hairTreatment),
-            Service("Extensions", "1200.0 Birr", R.drawable.Extensions)
+            Service("Hair Coloring", "800.0 Birr", R.drawable.haircoloring),
+            Service("Hair Treatment", "700.0 Birr", R.drawable.hairtreatment),
+            Service("Extensions", "1200.0 Birr", R.drawable.extensions)
         )
     }
 
