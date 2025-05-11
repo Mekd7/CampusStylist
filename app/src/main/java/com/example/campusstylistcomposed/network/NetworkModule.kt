@@ -37,7 +37,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://172.20.10.7:8080/") // Replace with your backend base URL, e.g., "https://api.campusstylist.com/"
+            .baseUrl("http://192.168.1.8:8080/") // Replace with your backend base URL, e.g., "https://api.campusstylist.com/"
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

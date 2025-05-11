@@ -3,7 +3,6 @@ package com.example.campusstylistcomposed.ui.screens
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,7 +15,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -27,14 +25,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.example.campusstylistcomposed.ui.viewmodel.CreateProfileViewModel
 
 @Preview(
@@ -52,7 +49,7 @@ fun CreateProfileScreen(
     token: String,
     isHairdresser: Boolean,
     onProfileCreated: () -> Unit,
-    viewModel: CreateProfileViewModel = viewModel()
+    viewModel: CreateProfileViewModel = hiltViewModel()
 ) {
     // Image picker launcher
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -60,11 +57,13 @@ fun CreateProfileScreen(
         onResult = { uri -> viewModel.onImageSelected(uri) }
     )
 
+    // Initialize ViewModel with token, role, and image picker
     LaunchedEffect(Unit) {
         viewModel.setInitialData(token, isHairdresser)
         viewModel.initializeImagePicker(imagePickerLauncher)
     }
 
+    // State synchronization
     var name by remember { mutableStateOf(viewModel.name.value) }
     var bio by remember { mutableStateOf(viewModel.bio.value) }
     val errorMessage by viewModel.errorMessage.collectAsState()
@@ -124,13 +123,19 @@ fun CreateProfileScreen(
                 modifier = Modifier
                     .size(120.dp)
                     .clip(CircleShape)
-                    .background(if (selectedImageUri != null) pinkColor else placeholderGrayColor)
+                    .background(if (selectedImageUri != null) Color.Transparent else placeholderGrayColor)
                     .clickable { viewModel.pickImage() },
                 contentAlignment = Alignment.Center
             ) {
                 if (selectedImageUri != null) {
-                    // Placeholder for displaying the image (requires Coil or Glide)
-                    // Example with Coil: Image(painter = rememberAsyncImagePainter(selectedImageUri), contentDescription = null)
+                    AsyncImage(
+                        model = selectedImageUri,
+                        contentDescription = "Selected profile picture",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape)
+                    )
                 }
             }
 

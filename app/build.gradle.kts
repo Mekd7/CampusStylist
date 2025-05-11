@@ -73,4 +73,9 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0") // Added for hiltViewModel()
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation ("androidx.activity:activity-compose:1.9.0")
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation ("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation("com.squareup.moshi:moshi-kotlin:1.15.0") // Use the latest version
+    kapt("com.squareup.moshi:moshi-kotlin-codegen:1.15.0") // For Kotlin code generation if needed
 }

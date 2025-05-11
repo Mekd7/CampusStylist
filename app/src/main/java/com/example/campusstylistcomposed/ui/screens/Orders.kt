@@ -17,7 +17,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.campusstylistcomposed.R
 import com.example.campusstylistcomposed.ui.viewmodel.BookingViewModel
 import com.example.campusstylistcomposed.ui.components.Footer

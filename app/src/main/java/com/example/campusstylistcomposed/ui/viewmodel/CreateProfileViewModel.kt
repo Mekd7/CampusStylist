@@ -8,6 +8,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.campusstylistcomposed.data.CreateProfileResponse // Import the response class
 import com.example.campusstylistcomposed.network.ApiService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,9 +17,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import java.io.File
 import java.io.FileOutputStream
-import java.io.InputStream
 import javax.inject.Inject
 
 @HiltViewModel
@@ -52,6 +53,7 @@ class CreateProfileViewModel @Inject constructor(
     fun setInitialData(token: String, isHairdresser: Boolean) {
         _token.value = token
         _isHairdresser.value = isHairdresser
+        println("Set token: $token") // Debug log
     }
 
     fun updateName(value: String) { _name.value = value }
@@ -62,11 +64,16 @@ class CreateProfileViewModel @Inject constructor(
     }
 
     fun pickImage() {
-        imagePickerLauncher.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+        imagePickerLauncher.launch(
+            PickVisualMediaRequest.Builder()
+                .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                .build()
+        )
     }
 
     fun onImageSelected(uri: Uri?) {
         _selectedImageUri.value = uri
+        println("Selected image URI: $uri") // Debug log
     }
 
     fun createProfile(onSuccess: () -> Unit) {
@@ -78,28 +85,32 @@ class CreateProfileViewModel @Inject constructor(
             _errorMessage.value = "Bio cannot be empty"
             return
         }
+        if (_selectedImageUri.value == null) {
+            _errorMessage.value = "Please select a profile picture"
+            return
+        }
 
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
 
             try {
-                val usernamePart = MultipartBody.Part.createFormData("username", _name.value)
-                val bioPart = MultipartBody.Part.createFormData("bio", _bio.value)
+                // Create RequestBody for text fields using RequestBody.create
+                val usernameBody = RequestBody.create("text/plain".toMediaTypeOrNull(), _name.value)
+                val bioBody = RequestBody.create("text/plain".toMediaTypeOrNull(), _bio.value)
                 val profilePicturePart = _selectedImageUri.value?.let { uri ->
                     val file = UriToFileConverter.convertUriToFile(uri, context)
                     file?.let {
-                        MultipartBody.Part.createFormData(
-                            "profilePicture",
-                            it.name,
-                            okhttp3.RequestBody.create("image/*".toMediaTypeOrNull(), it)
-                        )
+                        val requestBody = RequestBody.create("image/*".toMediaTypeOrNull(), it)
+                        MultipartBody.Part.createFormData("profilePicture", it.name, requestBody)
                     }
                 }
 
+                println("Sending request: username=${_name.value}, bio=${_bio.value}, profilePicture=${profilePicturePart?.body?.contentType()}")
                 val response = apiService.createProfile(
-                    username = usernamePart,
-                    bio = bioPart,
+                    token = "Bearer ${_token.value}",
+                    username = usernameBody,
+                    bio = bioBody,
                     profilePicture = profilePicturePart
                 )
                 if (response.message == "Profile created successfully") {
@@ -109,6 +120,7 @@ class CreateProfileViewModel @Inject constructor(
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Error creating profile: ${e.message}"
+                println("Error: ${e.message}") // Debug log
             } finally {
                 _isLoading.value = false
             }
@@ -138,7 +150,7 @@ class CreateProfileViewModel @Inject constructor(
             } catch (e: Exception) {
                 e.printStackTrace()
                 tempFile.delete()
-                return null
+                null
             }
         }
 

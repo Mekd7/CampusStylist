@@ -6,37 +6,45 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.campusstylistcomposed.ui.components.Footer
 import com.example.campusstylistcomposed.ui.components.FooterType
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.campusstylistcomposed.ui.viewmodel.HairDresserHomeViewModel
+
+
 
 @Composable
 fun HairDresserHomeScreen(
-    navController: NavHostController,
     token: String,
     onLogout: () -> Unit,
     onHomeClick: () -> Unit,
     onRequestsClick: () -> Unit,
     onScheduleClick: () -> Unit,
     onProfileClick: () -> Unit,
-    viewModel: HairDresserHomeViewModel = viewModel()
+    viewModel: HairDresserHomeViewModel = hiltViewModel()
 ) {
-    val posts by viewModel.posts.collectAsState()
+    val posts by remember { derivedStateOf { viewModel.posts } }
 
     val backgroundColor = Color(0xFF1C2526)
     val pinkColor = Color(0xFFFF4081)
     val whiteColor = Color.White
+    val blackColor = Color.Black
 
     Box(
         modifier = Modifier
@@ -46,63 +54,126 @@ fun HairDresserHomeScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
+                .padding(top = 16.dp)
         ) {
-            Row(
+            // Header with title
+            Text(
+                text = "Home",
+                color = whiteColor,
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Button(
-                    onClick = { navController.navigate("editProfile/$token") },
-                    colors = ButtonDefaults.buttonColors(containerColor = pinkColor)
-                ) {
-                    Text("Edit Profile", color = whiteColor)
-                }
-                Button(
-                    onClick = { navController.navigate("addPost/$token") },
-                    colors = ButtonDefaults.buttonColors(containerColor = pinkColor)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Post",
-                        tint = whiteColor
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                    .background(
+                        color = pinkColor.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(8.dp)
                     )
-                    Text("Add Post", color = whiteColor)
-                }
-            }
+                    .padding(8.dp)
+            )
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .weight(1f)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(posts) { post ->
-                    Image(
-                        painter = painterResource(id = post.imageId),
-                        contentDescription = post.serviceName,
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp)
-                            .clickable { navController.navigate("hairdresserPostDetail/$token/0/${post.serviceName}/${post.length}/${post.duration}") }
-                    )
+                            .shadow(4.dp, RoundedCornerShape(12.dp))
+                            .background(color = Color(0xFF2A3435), shape = RoundedCornerShape(12.dp))
+                            .clickable { /* Navigate to HairDresserProfileScreen */ },
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF2A3435)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Image(
+                                    painter = painterResource(id = post.imageId),
+                                    contentDescription = "${post.hairdresserName} Post",
+                                    modifier = Modifier
+                                        .size(80.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .padding(end = 12.dp)
+                                )
+                                Column {
+                                    Text(
+                                        text = post.hairdresserName,
+                                        color = whiteColor,
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "View Profile",
+                                        color = pinkColor,
+                                        fontSize = 14.sp,
+                                        modifier = Modifier.clickable {
+                                            // No navigation action here for hairdresser's own posts
+                                        }
+                                    )
+                                }
+                            }
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Profile",
+                                tint = pinkColor,
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(pinkColor.copy(alpha = 0.1f))
+                                    .padding(4.dp)
+                                    .clickable {
+                                        // No navigation action here for hairdresser's own posts
+                                    }
+                            )
+                        }
+                    }
                 }
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Footer(
+                footerType = FooterType.HAIRDRESSER, // Changed to HAIRDRESSER footer
+                onHomeClick = onHomeClick,
+                onSecondaryClick = onRequestsClick,
+                onTertiaryClick = onScheduleClick,
+                onProfileClick = onProfileClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        color = Color(0xFF2A3435),
+                        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
+                    )
+                    .padding(vertical = 8.dp)
+            )
         }
-        Footer(
-            footerType = FooterType.HAIRDRESSER,
-            onHomeClick = onHomeClick,
-            onSecondaryClick = onRequestsClick,
-            onTertiaryClick = onScheduleClick,
-            onProfileClick = onProfileClick,
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
     }
 }
 
-
-
-
-
+@Preview(showBackground = true)
+@Composable
+fun HairDresserHomeScreenPreview() {
+    val viewModel = HairDresserHomeViewModel()
+    HairDresserHomeScreen(
+        token = "mock_token",
+        onLogout = { /* Mock logout */ },
+        onHomeClick = { /* Mock home click */ },
+        onRequestsClick = { /* Mock requests click */ },
+        onScheduleClick = { /* Mock schedule click */ },
+        onProfileClick = { /* Mock profile click */ },
+        viewModel = viewModel
+    )
+}

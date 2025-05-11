@@ -28,6 +28,8 @@ import com.example.campusstylistcomposed.ui.viewmodel.ClientHomeViewModel
 import com.example.campusstylistcomposed.ui.viewmodel.HairDresserHomeViewModel
 import com.example.campusstylistcomposed.ui.viewmodel.ManageScheduleViewModel
 import com.example.campusstylistcomposed.ui.viewmodel.BookingViewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.campusstylistcomposed.ui.viewmodel.CreateProfileViewModel
 import java.net.URLEncoder
 import java.net.URLDecoder
 
@@ -96,7 +98,7 @@ fun SetupNavGraph(navController: NavHostController) {
                         }
                     }
                 },
-                viewModel = viewModel()
+                viewModel = hiltViewModel<CreateProfileViewModel>()
             )
         }
         composable(
@@ -127,7 +129,6 @@ fun SetupNavGraph(navController: NavHostController) {
             val token = backStackEntry.arguments?.getString("token") ?: ""
             val hairDresserHomeViewModel: HairDresserHomeViewModel = viewModel()
             HairDresserHomeScreen(
-                navController = navController,
                 token = token,
                 onLogout = {
                     navController.navigate("login") {

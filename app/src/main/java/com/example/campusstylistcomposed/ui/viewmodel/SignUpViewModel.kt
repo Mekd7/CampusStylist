@@ -58,7 +58,8 @@ class SignUpViewModel @Inject constructor(
                     role = response.role,
                     userId = response.userId
                 )
-                onSuccess(response.role, response.hasCreatedProfile, response.userId)
+                // Force hasCreatedProfile to false to always navigate to createProfile
+                onSuccess(response.role, false, response.userId)
             } catch (e: Exception) {
                 _errorMessage.value = "Signup failed: ${e.message}"
             } finally {

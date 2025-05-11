@@ -5,6 +5,7 @@ import com.example.campusstylistcomposed.data.AuthResponse
 import com.example.campusstylistcomposed.data.LoginRequest
 import com.example.campusstylistcomposed.domain.model.Booking
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Header
@@ -35,11 +36,12 @@ interface ApiService {
     suspend fun getUserProfile(@Header("Authorization") token: String): UserProfile
 
     @Multipart
-    @POST("profile")
+    @POST("profile") // Replace with your actual API endpoint
     suspend fun createProfile(
-        @Part username: MultipartBody.Part,
-        @Part bio: MultipartBody.Part,
-        @Part profilePicture: MultipartBody.Part?
+        @Header("Authorization") token: String,
+        @Part("username") username: RequestBody,
+        @Part("bio") bio: RequestBody,
+        @Part profilePicture: MultipartBody.Part? // Corrected: No part name in annotation
     ): CreateProfileResponse
 
     @POST("logout")
@@ -60,4 +62,3 @@ interface ApiService {
         @Query("userId") userId: Long // Ensure this is Long, not String
     ): List<Booking>
 }
-
