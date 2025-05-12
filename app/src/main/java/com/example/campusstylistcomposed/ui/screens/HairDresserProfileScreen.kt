@@ -42,7 +42,6 @@ fun HairDresserProfileScreen(
     onOrdersClick: () -> Unit,
     onProfileClick: () -> Unit,
     onPostClick: (HairdresserPost) -> Unit,
-    onBookClick: () -> Unit,
     navController: (String) -> Unit,
     viewModel: HairDresserProfileViewModel = hiltViewModel()
 ) {

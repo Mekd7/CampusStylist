@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import retrofit2.Response
 import javax.inject.Inject
 
 @HiltViewModel
@@ -72,19 +73,28 @@ class HairDresserProfileViewModel @Inject constructor(
     fun logout(onSuccess: () -> Unit) {
         viewModelScope.launch {
             _isLoading.value = true
+            _errorMessage.value = null
             try {
                 val sharedPreferences = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
                 val token = sharedPreferences.getString("auth_token", null)
                 val authHeader = if (token.isNullOrEmpty()) "" else "Bearer $token"
-                val response = apiService.logout(authHeader)
-                if (response.message.contains("success", ignoreCase = true)) {
+
+                if (authHeader.isNotEmpty()) {
+                    val response: Response<Unit> = apiService.logout(authHeader)
+                    if (response.isSuccessful) {
+                        clearSession()
+                        onSuccess()
+                    } else {
+                        _errorMessage.value = "Logout failed: ${response.code()}"
+                    }
+                } else {
                     clearSession()
                     onSuccess()
-                } else {
-                    _errorMessage.value = "Logout failed: ${response.message}"
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Error during logout: ${e.message ?: "Unknown error"}"
+                clearSession()
+                onSuccess()
             } finally {
                 _isLoading.value = false
             }
@@ -93,6 +103,12 @@ class HairDresserProfileViewModel @Inject constructor(
 
     private fun clearSession() {
         val sharedPreferences = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-        sharedPreferences.edit().remove("auth_token").apply()
+        sharedPreferences.edit().apply {
+            remove("auth_token")
+            remove("user_id")
+            remove("user_role")
+            remove("has_created_profile")
+            apply()
+        }
     }
 }
