@@ -76,25 +76,29 @@ fun SetupNavGraph(navController: NavHostController) {
             )
         }
         composable(
-            "createProfile/{token}/{isHairdresser}",
+            "createProfile/{userId}/{isHairdresser}",
             arguments = listOf(
-                navArgument("token") { defaultValue = "" },
+                navArgument("userId") { defaultValue = "" },
                 navArgument("isHairdresser") { defaultValue = "false" }
             )
         ) { backStackEntry ->
-            val token = backStackEntry.arguments?.getString("token") ?: ""
+            val userId = backStackEntry.arguments?.getString("userId") ?: ""
             val isHairdresser = backStackEntry.arguments?.getString("isHairdresser")?.toBoolean() ?: false
+
+            // Fetch token here if needed, or ensure it's passed correctly
+            val token = userId // or get it from your auth state
+
             CreateProfileScreen(
                 token = token,
                 isHairdresser = isHairdresser,
                 onProfileCreated = {
                     if (isHairdresser) {
-                        navController.navigate("hairdresserProfile/$token/$token") {
-                            popUpTo("createProfile/{token}/{isHairdresser}") { inclusive = true }
+                        navController.navigate("hairdresserProfile/$userId/$userId") {
+                            popUpTo("createProfile/{userId}/{isHairdresser}") { inclusive = true }
                         }
                     } else {
-                        navController.navigate("clientHome/$token") {
-                            popUpTo("createProfile/{token}/{isHairdresser}") { inclusive = true }
+                        navController.navigate("clientHome/$userId") {
+                            popUpTo("createProfile/{userId}/{isHairdresser}") { inclusive = true }
                         }
                     }
                 },

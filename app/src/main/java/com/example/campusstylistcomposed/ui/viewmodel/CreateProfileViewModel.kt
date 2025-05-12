@@ -8,7 +8,6 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.campusstylistcomposed.data.CreateProfileResponse // Import the response class
 import com.example.campusstylistcomposed.network.ApiService
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +17,8 @@ import kotlinx.coroutines.launch
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
 import java.io.FileOutputStream
 import javax.inject.Inject
@@ -53,7 +54,6 @@ class CreateProfileViewModel @Inject constructor(
     fun setInitialData(token: String, isHairdresser: Boolean) {
         _token.value = token
         _isHairdresser.value = isHairdresser
-        println("Set token: $token") // Debug log
     }
 
     fun updateName(value: String) { _name.value = value }
@@ -73,7 +73,6 @@ class CreateProfileViewModel @Inject constructor(
 
     fun onImageSelected(uri: Uri?) {
         _selectedImageUri.value = uri
-        println("Selected image URI: $uri") // Debug log
     }
 
     fun createProfile(onSuccess: () -> Unit) {
@@ -85,42 +84,45 @@ class CreateProfileViewModel @Inject constructor(
             _errorMessage.value = "Bio cannot be empty"
             return
         }
-        if (_selectedImageUri.value == null) {
-            _errorMessage.value = "Please select a profile picture"
-            return
-        }
 
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
 
             try {
-                // Create RequestBody for text fields using RequestBody.create
-                val usernameBody = RequestBody.create("text/plain".toMediaTypeOrNull(), _name.value)
-                val bioBody = RequestBody.create("text/plain".toMediaTypeOrNull(), _bio.value)
+                // Create text parts
+                val usernameBody = _name.value.toRequestBody("text/plain".toMediaTypeOrNull())
+                val bioBody = _bio.value.toRequestBody("text/plain".toMediaTypeOrNull())
+
+                // Create image part if available
                 val profilePicturePart = _selectedImageUri.value?.let { uri ->
                     val file = UriToFileConverter.convertUriToFile(uri, context)
                     file?.let {
-                        val requestBody = RequestBody.create("image/*".toMediaTypeOrNull(), it)
-                        MultipartBody.Part.createFormData("profilePicture", it.name, requestBody)
+                        val requestBody = it.asRequestBody("image/*".toMediaTypeOrNull())
+                        MultipartBody.Part.createFormData(
+                            "profilePicture",
+                            it.name,
+                            requestBody
+                        )
                     }
                 }
 
-                println("Sending request: username=${_name.value}, bio=${_bio.value}, profilePicture=${profilePicturePart?.body?.contentType()}")
+                // Make the API call
                 val response = apiService.createProfile(
-                    token = "Bearer ${_token.value}",
+                    token = "Bearer ${_token.value}", // Add Bearer prefix here
                     username = usernameBody,
                     bio = bioBody,
                     profilePicture = profilePicturePart
                 )
+
                 if (response.message == "Profile created successfully") {
                     onSuccess()
                 } else {
-                    _errorMessage.value = "Failed to create profile: ${response.message}"
+                    _errorMessage.value = response.message ?: "Failed to create profile"
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "Error creating profile: ${e.message}"
-                println("Error: ${e.message}") // Debug log
+                _errorMessage.value = "Error creating profile: ${e.localizedMessage ?: "Unknown error"}"
+                e.printStackTrace()
             } finally {
                 _isLoading.value = false
             }
@@ -128,25 +130,18 @@ class CreateProfileViewModel @Inject constructor(
     }
 
     object UriToFileConverter {
-        @Suppress("DEPRECATION") // For older Android versions, adjust as needed
         fun convertUriToFile(uri: Uri, context: Context): File? {
             val contentResolver = context.contentResolver
-            val fileName = getFileName(uri, contentResolver) ?: "image_${System.currentTimeMillis()}.jpg"
-            val cacheDir = context.cacheDir
-            val tempFile = File(cacheDir, fileName)
+            val fileName = getFileName(uri, contentResolver) ?: "profile_${System.currentTimeMillis()}.jpg"
+            val tempFile = File.createTempFile("temp_", fileName, context.cacheDir)
 
             return try {
-                contentResolver.openInputStream(uri)?.let { inputStream ->
-                    inputStream.use { input ->
-                        FileOutputStream(tempFile).use { output ->
-                            input.copyTo(output)
-                        }
+                contentResolver.openInputStream(uri)?.use { inputStream ->
+                    FileOutputStream(tempFile).use { outputStream ->
+                        inputStream.copyTo(outputStream)
                     }
-                    tempFile
-                } ?: run {
-                    tempFile.delete()
-                    null
                 }
+                tempFile
             } catch (e: Exception) {
                 e.printStackTrace()
                 tempFile.delete()
@@ -155,16 +150,17 @@ class CreateProfileViewModel @Inject constructor(
         }
 
         private fun getFileName(uri: Uri, contentResolver: android.content.ContentResolver): String? {
-            val cursor = contentResolver.query(uri, null, null, null, null)
-            cursor?.use {
-                if (it.moveToFirst()) {
-                    val nameIndex = it.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-                    if (nameIndex != -1) {
-                        return it.getString(nameIndex)
+            return when (uri.scheme) {
+                "content" -> {
+                    contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                        if (cursor.moveToFirst()) {
+                            cursor.getString(cursor.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
+                        } else null
                     }
                 }
+                "file" -> File(uri.path).name
+                else -> null
             }
-            return null
         }
     }
 }
