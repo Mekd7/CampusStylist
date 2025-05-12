@@ -1,6 +1,7 @@
 package com.example.campusstylistcomposed.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -24,6 +25,7 @@ import com.example.campusstylistcomposed.ui.screens.PostDetailScreen
 import com.example.campusstylistcomposed.ui.screens.EditProfile
 import com.example.campusstylistcomposed.ui.screens.AddPostScreen
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.campusstylistcomposed.domain.Post
 import com.example.campusstylistcomposed.ui.viewmodel.ClientHomeViewModel
 import com.example.campusstylistcomposed.ui.viewmodel.HairDresserHomeViewModel
 import com.example.campusstylistcomposed.ui.viewmodel.ManageScheduleViewModel
@@ -32,6 +34,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.campusstylistcomposed.ui.viewmodel.CreateProfileViewModel
 import java.net.URLEncoder
 import java.net.URLDecoder
+import androidx.compose.material3.Text
 
 @Composable
 fun SetupNavGraph(navController: NavHostController) {
@@ -116,27 +119,39 @@ fun SetupNavGraph(navController: NavHostController) {
         ) { backStackEntry ->
             val token = backStackEntry.arguments?.getString("token") ?: ""
             val hairDresserHomeViewModel: HairDresserHomeViewModel = viewModel()
-            HairDresserHomeScreen(
-                token = token,
-                onLogout = {
-                    navController.navigate("login") {
-                        popUpTo(0) { inclusive = true }
-                    }
-                },
-                onHomeClick = { /* Already on home */ },
-                onRequestsClick = { navController.navigate("myRequests/$token") },
-                onScheduleClick = { navController.navigate("manageSchedule/$token") },
-                onProfileClick = { navController.navigate("hairdresserProfile/$token") },
-                viewModel = hairDresserHomeViewModel
-            )
+            val hairdresserIdState = hairDresserHomeViewModel.hairdresserId.collectAsState()
+            val hairdresserId = hairdresserIdState.value
+
+            if (hairdresserId != null) {
+                HairDresserHomeScreen(
+                    token = token,
+                    onLogout = {
+                        navController.navigate("login") {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    },
+                    onHomeClick = { /* Already on home */ },
+                    onRequestsClick = { navController.navigate("myRequests/$token") },
+                    onScheduleClick = { navController.navigate("manageSchedule/$token") },
+                    onProfileClick = { navController.navigate("hairdresserProfile/$token/$hairdresserId") },
+                    viewModel = hairDresserHomeViewModel
+                )
+            } else {
+                Text("Loading hairdresser ID...")
+            }
         }
         composable(
-            "hairdresserProfile/{token}",
-            arguments = listOf(navArgument("token") { defaultValue = "" })
+            "hairdresserProfile/{token}/{hairdresserId}",
+            arguments = listOf(
+                navArgument("token") { defaultValue = "" },
+                navArgument("hairdresserId") { defaultValue = "" }
+            )
         ) { backStackEntry ->
             val token = backStackEntry.arguments?.getString("token") ?: ""
+            val hairdresserId = backStackEntry.arguments?.getString("hairdresserId") ?: ""
             HairDresserProfileScreen(
                 token = token,
+                hairdresserId = hairdresserId,
                 onLogout = {
                     navController.navigate("login") {
                         popUpTo(0) { inclusive = true }
@@ -145,37 +160,52 @@ fun SetupNavGraph(navController: NavHostController) {
                 onHomeClick = { navController.navigate("hairdresserHome/$token") },
                 onOrdersClick = { navController.navigate("myRequests/$token") },
                 onProfileClick = { /* Already on profile */ },
+                onPostClick = { post ->
+                    navController.navigate("hairdresserPostDetail/{token}/{hairdresserId}/{postId}/{pictureUrl}/{description}".replace(
+                        oldValue = "{token}",
+                        newValue = token
+                    ).replace(
+                        oldValue = "{hairdresserId}",
+                        newValue = hairdresserId
+                    ).replace(
+                        oldValue = "{postId}",
+                        newValue = post.id.toString()
+                    ).replace(
+                        oldValue = "{pictureUrl}",
+                        newValue = URLEncoder.encode(post.pictureUrl, "UTF-8")
+                    ).replace(
+                        oldValue = "{description}",
+                        newValue = URLEncoder.encode(post.description, "UTF-8")
+                    ))
+                },
                 navController = { route -> navController.navigate(route) },
                 viewModel = hiltViewModel()
             )
         }
         composable(
-            "hairdresserPostDetail/{token}/{hairdresserId}/{imageId}/{serviceName}/{length}/{duration}",
+            "hairdresserPostDetail/{token}/{hairdresserId}/{postId}/{pictureUrl}/{description}",
             arguments = listOf(
                 navArgument("token") { defaultValue = "" },
                 navArgument("hairdresserId") { defaultValue = "" },
-                navArgument("imageId") { defaultValue = "0" },
-                navArgument("serviceName") { defaultValue = "" },
-                navArgument("length") { defaultValue = "" },
-                navArgument("duration") { defaultValue = "" }
+                navArgument("postId") { defaultValue = "0" },
+                navArgument("pictureUrl") { defaultValue = "" },
+                navArgument("description") { defaultValue = "" }
             )
         ) { backStackEntry ->
             val token = backStackEntry.arguments?.getString("token") ?: ""
             val hairdresserId = backStackEntry.arguments?.getString("hairdresserId") ?: ""
-            val imageId = backStackEntry.arguments?.getString("imageId")?.toIntOrNull() ?: 0
-            val serviceName = URLDecoder.decode(backStackEntry.arguments?.getString("serviceName") ?: "", "UTF-8")
-            val length = URLDecoder.decode(backStackEntry.arguments?.getString("length") ?: "", "UTF-8")
-            val duration = URLDecoder.decode(backStackEntry.arguments?.getString("duration") ?: "", "UTF-8")
+            val postId = backStackEntry.arguments?.getString("postId")?.toLongOrNull() ?: 0L
+            val pictureUrl = URLDecoder.decode(backStackEntry.arguments?.getString("pictureUrl") ?: "", "UTF-8")
+            val description = URLDecoder.decode(backStackEntry.arguments?.getString("description") ?: "", "UTF-8")
             HairDresserPostDetailScreen(
                 token = token,
-                hairdresserName = hairdresserId,
-                imageId = imageId,
-                serviceName = serviceName,
-                length = length,
-                duration = duration,
+                hairdresserId = hairdresserId,
+                postId = postId,
+                pictureUrl = pictureUrl,
+                description = description,
                 onHomeClick = { navController.navigate("hairdresserHome/$token") },
                 onOrdersClick = { navController.navigate("myRequests/$token") },
-                onProfileClick = { navController.navigate("hairdresserProfile/$token") },
+                onProfileClick = { navController.navigate("hairdresserProfile/$token/$hairdresserId") },
                 onBackClick = { navController.popBackStack() }
             )
         }

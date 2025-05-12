@@ -23,11 +23,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.campusstylistcomposed.R
 import com.example.campusstylistcomposed.ui.components.Footer
 import com.example.campusstylistcomposed.ui.components.FooterType
 import com.example.campusstylistcomposed.ui.viewmodel.HairDresserHomeViewModel
-
-
 
 @Composable
 fun HairDresserHomeScreen(
@@ -36,10 +35,11 @@ fun HairDresserHomeScreen(
     onHomeClick: () -> Unit,
     onRequestsClick: () -> Unit,
     onScheduleClick: () -> Unit,
-    onProfileClick: () -> Unit,
+    onProfileClick: (String) -> Unit, // Changed to accept hairdresserId
     viewModel: HairDresserHomeViewModel = hiltViewModel()
 ) {
     val posts by remember { derivedStateOf { viewModel.posts } }
+    val hairdresserId by viewModel.hairdresserId.collectAsState(initial = null)
 
     val backgroundColor = Color(0xFF1C2526)
     val pinkColor = Color(0xFFFF4081)
@@ -56,7 +56,6 @@ fun HairDresserHomeScreen(
                 .fillMaxSize()
                 .padding(top = 16.dp)
         ) {
-            // Header with title
             Text(
                 text = "Home",
                 color = whiteColor,
@@ -120,7 +119,7 @@ fun HairDresserHomeScreen(
                                         color = pinkColor,
                                         fontSize = 14.sp,
                                         modifier = Modifier.clickable {
-                                            // No navigation action here for hairdresser's own posts
+                                            onProfileClick(post.uploaderId) // Navigate to the clicked profile
                                         }
                                     )
                                 }
@@ -135,7 +134,7 @@ fun HairDresserHomeScreen(
                                     .background(pinkColor.copy(alpha = 0.1f))
                                     .padding(4.dp)
                                     .clickable {
-                                        // No navigation action here for hairdresser's own posts
+                                        hairdresserId?.let { onProfileClick(it) } // Navigate to own profile
                                     }
                             )
                         }
@@ -146,11 +145,11 @@ fun HairDresserHomeScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Footer(
-                footerType = FooterType.HAIRDRESSER, // Changed to HAIRDRESSER footer
+                footerType = FooterType.HAIRDRESSER,
                 onHomeClick = onHomeClick,
                 onSecondaryClick = onRequestsClick,
                 onTertiaryClick = onScheduleClick,
-                onProfileClick = onProfileClick,
+                onProfileClick = { hairdresserId?.let { onProfileClick(it) } }, // Use the state
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(
@@ -166,14 +165,17 @@ fun HairDresserHomeScreen(
 @Preview(showBackground = true)
 @Composable
 fun HairDresserHomeScreenPreview() {
+    // Create a simple ViewModel instance for the preview
     val viewModel = HairDresserHomeViewModel()
+    val rememberViewModel = remember { viewModel } // Use remember for preview
+
     HairDresserHomeScreen(
         token = "mock_token",
         onLogout = { /* Mock logout */ },
         onHomeClick = { /* Mock home click */ },
         onRequestsClick = { /* Mock requests click */ },
         onScheduleClick = { /* Mock schedule click */ },
-        onProfileClick = { /* Mock profile click */ },
-        viewModel = viewModel
+        onProfileClick = { hairdresserId -> println("Profile clicked: $hairdresserId") },
+        viewModel = rememberViewModel
     )
 }

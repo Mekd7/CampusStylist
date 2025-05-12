@@ -3,8 +3,11 @@ package com.example.campusstylistcomposed.network
 import com.example.campusstylistcomposed.data.AuthRequest
 import com.example.campusstylistcomposed.data.AuthResponse
 import com.example.campusstylistcomposed.data.LoginRequest
+import com.example.campusstylistcomposed.domain.Post
 import com.example.campusstylistcomposed.domain.model.Booking
 import com.example.campusstylistcomposed.domain.model.User
+
+
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.http.Body
@@ -71,6 +74,12 @@ interface ApiService {
     @GET("bookings/{userId}")
     suspend fun getBookingsByUserId(
         @Header("Authorization") token: String,
-        @Path("userId") userId: Long // Updated to use @Path for URL parameter
+        @Path("userId") userId: Long
     ): List<Booking>
+
+    @GET("posts/{hairdresserId}")
+    suspend fun getPostsByHairdresserId(
+        @Path("hairdresserId") hairdresserId: String,
+        @Header("Authorization") token: String
+    ): List<Post>
 }

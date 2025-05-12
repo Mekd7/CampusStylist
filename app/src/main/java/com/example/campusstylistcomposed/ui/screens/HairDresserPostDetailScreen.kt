@@ -1,7 +1,5 @@
 package com.example.campusstylistcomposed.ui.screens
 
-
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -11,23 +9,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.campusstylistcomposed.R
+import coil.compose.AsyncImage
 import com.example.campusstylistcomposed.ui.components.Footer
 import com.example.campusstylistcomposed.ui.components.FooterType
 
 @Composable
 fun HairDresserPostDetailScreen(
     token: String,
-    hairdresserName: String,
-    imageId: Int,
-    serviceName: String,
-    length: String,
-    duration: String,
+    hairdresserId: String, // Ensure this matches the nav argument name
+    postId: Long,         // Ensure this matches the nav argument name
+    pictureUrl: String,   // Ensure this matches the nav argument name
+    description: String,  // Ensure this matches the nav argument name
     onHomeClick: () -> Unit,
     onOrdersClick: () -> Unit,
     onProfileClick: () -> Unit,
@@ -59,35 +55,29 @@ fun HairDresserPostDetailScreen(
                 )
             }
             Text(
-                text = hairdresserName,
+                text = "Hairdresser ID: $hairdresserId", // Placeholder for actual name
                 color = whiteColor,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-            Image(
-                painter = painterResource(id = imageId),
-                contentDescription = serviceName,
+            AsyncImage(
+                model = pictureUrl,
+                contentDescription = description,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(300.dp)
                     .padding(bottom = 16.dp)
             )
             Text(
-                text = "Service: $serviceName",
+                text = "Description:",
                 color = whiteColor,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
             Text(
-                text = "Length: $length",
-                color = whiteColor,
-                fontSize = 16.sp,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            Text(
-                text = "Duration: $duration",
+                text = description,
                 color = whiteColor,
                 fontSize = 16.sp
             )
@@ -95,7 +85,7 @@ fun HairDresserPostDetailScreen(
         }
 
         Footer(
-            footerType = FooterType.CLIENT,
+            footerType = FooterType.HAIRDRESSER, // Adjust if needed
             onHomeClick = onHomeClick,
             onSecondaryClick = onOrdersClick,
             onTertiaryClick = onProfileClick,
@@ -112,11 +102,10 @@ fun HairDresserPostDetailScreen(
 fun HairDresserPostDetailScreenPreview() {
     HairDresserPostDetailScreen(
         token = "mock_token",
-        hairdresserName = "Ashley Gram",
-        imageId = R.drawable.braid,
-        serviceName = "Braid",
-        length = "Medium",
-        duration = "2 hours",
+        hairdresserId = "123",
+        postId = 1L,
+        pictureUrl = "https://via.placeholder.com/300",
+        description = "Beautiful braid style",
         onHomeClick = { /* Mock home click */ },
         onOrdersClick = { /* Mock orders click */ },
         onProfileClick = { /* Mock profile click */ },
