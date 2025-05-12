@@ -4,16 +4,17 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
-import java.util.concurrent.ConcurrentHashMap
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 object JwtConfig {
-    private const val SECRET = "mySuperSecretKey1234567890abcdef" // Load from env in production
+    // Configuration
+    private const val SECRET = "mySuperSecretKey1234567890abcdef"
     private const val ISSUER = "http://localhost:8080/"
     private const val AUDIENCE = "campusstylist-api"
-    private const val VALIDITY = 24 * 60 * 60 * 1000 // 24 hours in milliseconds
+    private const val VALIDITY = 24 * 60 * 60 * 1000 // 24 hours
 
-    // Token blacklist to store invalidated tokens and their expiration times
+    // Token blacklist
     private val tokenBlacklist = ConcurrentHashMap<String, Long>()
 
     fun configureJwt(): AuthenticationConfig.() -> Unit = {
@@ -25,19 +26,13 @@ object JwtConfig {
                     .build()
             )
             validate { credential ->
-                // Extract the token from the payload's "jti" (JWT ID) claim (if you want to track blacklisting)
-                val tokenId = credential.payload.id
-                if (tokenId != null) {
-                    val isBlacklisted = tokenBlacklist[tokenId]?.let { expiry ->
-                        expiry > System.currentTimeMillis()
-                    } ?: false
-
-                    if (!isBlacklisted && credential.payload.getClaim("email").asString().isNotEmpty()) {
+                try {
+                    if (credential.payload.getClaim("email").asString().isNotEmpty()) {
                         JWTPrincipal(credential.payload)
                     } else {
                         null
                     }
-                } else {
+                } catch (e: Exception) {
                     null
                 }
             }
@@ -49,8 +44,8 @@ object JwtConfig {
             .withIssuer(ISSUER)
             .withAudience(AUDIENCE)
             .withClaim("email", email)
+            .withIssuedAt(Date())
             .withExpiresAt(Date(System.currentTimeMillis() + VALIDITY))
-            .withJWTId(UUID.randomUUID().toString()) // Add a unique ID to track blacklisting
             .sign(Algorithm.HMAC256(SECRET))
     }
 
@@ -75,5 +70,15 @@ object JwtConfig {
         return tokenBlacklist[tokenId]?.let { expiry ->
             expiry > System.currentTimeMillis()
         } ?: false
+    }
+
+    // Moved outside companion object as regular object function
+    fun isTokenExpired(token: String): Boolean {
+        return try {
+            val decoded = JWT.decode(token)
+            decoded.expiresAt.before(Date())
+        } catch (e: Exception) {
+            true
+        }
     }
 }

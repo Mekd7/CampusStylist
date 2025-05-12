@@ -12,6 +12,7 @@ import com.example.campusstylist.backend.domain.model.Role
 class UserRepository {
     private val logger = LoggerFactory.getLogger(UserRepository::class.java)
 
+    // Create user
     fun create(user: User): User = transaction {
         try {
             val id = Users.insert {
@@ -32,6 +33,7 @@ class UserRepository {
         }
     }
 
+    // Find user by ID
     fun findById(id: Long): User? = transaction {
         Users.select { Users.id eq id }
             .map {
@@ -50,6 +52,7 @@ class UserRepository {
             .singleOrNull()
     }
 
+    // Find user by email
     fun findByEmail(email: String): User? = transaction {
         Users.select { Users.email eq email }
             .map {
@@ -68,6 +71,7 @@ class UserRepository {
             .singleOrNull()
     }
 
+    // Update user
     fun update(user: User): Boolean = transaction {
         user.id?.let {
             try {
@@ -88,12 +92,39 @@ class UserRepository {
         } ?: false
     }
 
+    // Delete user by ID
     fun delete(id: Long): Boolean = transaction {
         try {
-            Users.deleteWhere { Users.id eq id } > 0
+            val deletedRows = Users.deleteWhere { Users.id eq id }
+            if (deletedRows > 0) {
+                logger.debug("User with id=$id deleted successfully.")
+                true
+            } else {
+                logger.warn("User with id=$id not found for deletion.")
+                false
+            }
         } catch (e: PSQLException) {
             logger.error("Failed to delete user id=$id: ${e.message}", e)
             throw IllegalStateException("Database error: ${e.message}", e)
         }
+    }
+
+    // New method to fetch user by ID (added)
+    fun getUserById(id: Long): User? = transaction {
+        Users.select { Users.id eq id }
+            .map {
+                User(
+                    id = it[Users.id],
+                    email = it[Users.email],
+                    username = it[Users.username],
+                    password = it[Users.password],
+                    role = Role.fromDbValue(it[Users.role]),
+                    profilePicture = it[Users.profilePicture],
+                    bio = it[Users.bio],
+                    name = it[Users.name],
+                    hasCreatedProfile = it[Users.hasCreatedProfile]
+                )
+            }
+            .singleOrNull()
     }
 }

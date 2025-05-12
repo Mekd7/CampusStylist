@@ -187,42 +187,6 @@ fun Route.userRoutes(userService: UserService) {
         }
 
         // Delete account (both roles)
-        delete("/profile/{id}") {
-            try {
-                val principal = call.principal<JWTPrincipal>()
-                val email = principal?.payload?.getClaim("email")?.asString()
-                    ?: return@delete call.respond(
-                        HttpStatusCode.Unauthorized,
-                        mapOf("error" to "Unauthorized", "message" to "Invalid token")
-                    )
-                val id = call.parameters["id"]?.toLongOrNull()
-                    ?: return@delete call.respond(
-                        HttpStatusCode.BadRequest,
-                        mapOf("error" to "Invalid input", "message" to "Invalid user ID")
-                    )
-                val user = userService.findByEmail(email)
-                    ?: return@delete call.respond(
-                        HttpStatusCode.Unauthorized,
-                        mapOf("error" to "Unauthorized", "message" to "User not found")
-                    )
-                if (user.id != id) {
-                    return@delete call.respond(
-                        HttpStatusCode.Forbidden,
-                        mapOf("error" to "Forbidden", "message" to "You can only delete your own profile")
-                    )
-                }
-                val success = userService.delete(id)
-                if (success) {
-                    call.respond(HttpStatusCode.NoContent)
-                } else {
-                    call.respond(HttpStatusCode.NotFound, mapOf("error" to "Not found", "message" to "User not found"))
-                }
-            } catch (e: SQLException) {
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Database error", "message" to e.message))
-            } catch (e: Exception) {
-                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Server error", "message" to e.message))
-            }
-        }
     }
 
     // Logout (both roles, authentication optional)
@@ -249,4 +213,55 @@ fun Route.userRoutes(userService: UserService) {
             call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Server error", "message" to e.message))
         }
     }
+
+    // Add this inside `authenticate("auth-jwt")` block
+    delete("/user/{id}") {
+        try {
+            // 1. Verify ID
+            val idParam = call.parameters["id"]?.toLongOrNull()
+                ?: return@delete call.respond(
+                    HttpStatusCode.BadRequest,
+                    mapOf("error" to "Invalid ID")
+                )
+
+            // 2. Verify token
+            val principal = call.principal<JWTPrincipal>()
+                ?: return@delete call.respond(HttpStatusCode.Unauthorized)
+
+            // 3. Check expiration
+            val expiry = principal.expiresAt?.time ?: System.currentTimeMillis()
+            if (expiry < System.currentTimeMillis()) {
+                return@delete call.respond(
+                    HttpStatusCode.Unauthorized,
+                    mapOf("error" to "Token expired")
+                )
+            }
+
+            // 4. Verify email claim
+            val email = principal.getClaim("email", String::class)
+                ?: return@delete call.respond(HttpStatusCode.Unauthorized)
+
+            // 5. Verify user exists and owns account
+            val user = userService.getUserById(idParam)
+                ?: return@delete call.respond(HttpStatusCode.NotFound)
+
+            if (user.email != email) {
+                return@delete call.respond(HttpStatusCode.Forbidden)
+            }
+
+            // 6. Delete user
+            userService.deleteUser(idParam)
+
+            // 7. Blacklist token
+            principal.payload.id?.let { jti ->
+                JwtConfig.blacklistToken(jti, expiry)
+            }
+
+            call.respond(HttpStatusCode.OK, mapOf("message" to "Account deleted"))
+        } catch (e: Exception) {
+            call.respond(HttpStatusCode.InternalServerError)
+        }
+    }
+
+
 }

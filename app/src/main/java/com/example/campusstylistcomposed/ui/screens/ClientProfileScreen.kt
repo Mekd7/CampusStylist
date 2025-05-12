@@ -49,6 +49,7 @@ fun ClientProfileScreen(
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
     val user by viewModel.user.collectAsState()
+    val isProfileDeleted by viewModel.isProfileDeleted.collectAsState()
 
     Box(
         modifier = Modifier
@@ -61,88 +62,105 @@ fun ClientProfileScreen(
                 modifier = Modifier.align(Alignment.Center)
             )
         } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
+            if (isProfileDeleted) {
+                // If profile is deleted, show a message and navigate to login screen
                 Text(
-                    text = user?.username ?: "User name",
+                    text = "Your account has been successfully deleted.",
                     color = whiteColor,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .padding(16.dp)
                 )
-
-                AsyncImage(
-                    model = user?.profilePicture ?: "https://via.placeholder.com/100",
-                    contentDescription = "Profile Image",
+            } else {
+                Column(
                     modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)
-                        .padding(top = 8.dp),
-                    contentScale = ContentScale.Crop
-                )
-
-                Text(
-                    text = user?.bio ?: "Client bio",
-                    color = whiteColor,
-                    fontSize = 16.sp,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                Button(
-                    onClick = { /* Handle delete account logic */ },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .padding(bottom = 16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = pinkColor, contentColor = whiteColor),
-                    shape = CircleShape,
-                    enabled = !isLoading
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Text("Delete Account", fontSize = 16.sp)
-                }
-
-                Button(
-                    onClick = { onEditProfileClick() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp)
-                        .padding(bottom = 16.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = pinkColor, contentColor = whiteColor),
-                    shape = CircleShape,
-                    enabled = !isLoading
-                ) {
-                    Text("Edit Profile", fontSize = 16.sp)
-                }
-
-                Button(
-                    onClick = {
-                        viewModel.logout {
-                            onLogout()
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = pinkColor, contentColor = whiteColor),
-                    shape = CircleShape,
-                    enabled = !isLoading
-                ) {
-                    Text("Log out", fontSize = 16.sp)
-                }
-
-                errorMessage?.let {
                     Text(
-                        text = "Error: $it",
-                        color = Color.Red,
-                        fontSize = 14.sp,
+                        text = user?.username ?: "User name",
+                        color = whiteColor,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+
+                    AsyncImage(
+                        model = user?.profilePicture ?: "https://via.placeholder.com/100",
+                        contentDescription = "Profile Image",
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape)
+                            .padding(top = 8.dp),
+                        contentScale = ContentScale.Crop
+                    )
+
+                    Text(
+                        text = user?.bio ?: "Client bio",
+                        color = whiteColor,
+                        fontSize = 16.sp,
                         modifier = Modifier.padding(top = 8.dp)
                     )
+
+                    Spacer(modifier = Modifier.height(32.dp))
+
+                    Button(
+                        onClick = {
+                            viewModel.deleteProfile(token) {
+                                navigateToLogin("login") // Navigate to login after deletion
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .padding(bottom = 16.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = pinkColor, contentColor = whiteColor),
+                        shape = CircleShape,
+                        enabled = !isLoading
+                    ) {
+                        Text("Delete Account", fontSize = 16.sp)
+                    }
+
+                    Button(
+                        onClick = { onEditProfileClick() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .padding(bottom = 16.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = pinkColor, contentColor = whiteColor),
+                        shape = CircleShape,
+                        enabled = !isLoading
+                    ) {
+                        Text("Edit Profile", fontSize = 16.sp)
+                    }
+
+                    Button(
+                        onClick = {
+                            viewModel.logout {
+                                onLogout()
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = pinkColor, contentColor = whiteColor),
+                        shape = CircleShape,
+                        enabled = !isLoading
+                    ) {
+                        Text("Log out", fontSize = 16.sp)
+                    }
+
+                    errorMessage?.let {
+                        Text(
+                            text = "Error: $it",
+                            color = Color.Red,
+                            fontSize = 14.sp,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
                 }
             }
         }

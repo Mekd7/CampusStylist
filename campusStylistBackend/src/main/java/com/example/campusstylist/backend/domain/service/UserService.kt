@@ -135,4 +135,18 @@ class UserService(private val userRepository: UserRepository) {
             null
         }
     }
+
+    fun getUserById(id: Long): User? {
+        return transaction {
+            userRepository.findById(id)
+        }
+    }
+
+    // Add deleteUser method
+    fun deleteUser(id: Long): Boolean {
+        return transaction {
+            userRepository.delete(id)
+        }
+    }
+
 }
