@@ -1,12 +1,14 @@
 package com.example.campusstylistcomposed.network
 
 import android.content.Context
+import com.example.campusstylistcomposed.data.repository.AuthRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
@@ -16,11 +18,18 @@ import javax.inject.Singleton
 object NetworkModule {
     @Provides
     @Singleton
-    fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
+    fun provideOkHttpClient(
+        @ApplicationContext context: Context,
+        authRepository: AuthRepository // Inject AuthRepository
+    ): OkHttpClient {
+        val logging = HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
         return OkHttpClient.Builder()
+            .addInterceptor(logging)
             .addInterceptor { chain ->
-                val sharedPreferences = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-                val token = sharedPreferences.getString("auth_token", null)
+                val token = authRepository.token.value // Retrieve token from DataStore via StateFlow
+                println("Sending request with token: $token") // Debug log
                 val request = chain.request().newBuilder()
                     .apply {
                         if (token != null) {
@@ -37,7 +46,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl("http://192.168.1.8:8080/") // Replace with your backend base URL, e.g., "https://api.campusstylist.com/"
+            .baseUrl("http://172.20.10.7:8080/")
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create())
             .build()

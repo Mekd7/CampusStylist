@@ -12,6 +12,7 @@ import retrofit2.http.Header
 import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
+import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.Response
 
@@ -27,22 +28,22 @@ data class CreateProfileResponse(
 )
 
 interface ApiService {
-    @POST("auth/login")
-    suspend fun login(@Body request: LoginRequest): AuthResponse
-
     @POST("auth/register")
     suspend fun signUp(@Body request: AuthRequest): AuthResponse
+
+    @POST("auth/login")
+    suspend fun login(@Body request: LoginRequest): AuthResponse
 
     @GET("auth/user/me")
     suspend fun getUserProfile(@Header("Authorization") token: String): UserProfile
 
     @Multipart
-    @POST("profile") // Replace with your actual API endpoint
+    @POST("profile")
     suspend fun createProfile(
-        @Header("Authorization") token: String,
         @Part("username") username: RequestBody,
         @Part("bio") bio: RequestBody,
-        @Part profilePicture: MultipartBody.Part? // Corrected: No part name in annotation
+        @Part profilePicture: MultipartBody.Part?,
+        @Header("Authorization") authorization: String
     ): CreateProfileResponse
 
     @POST("/logout")
@@ -60,6 +61,6 @@ interface ApiService {
     @GET("bookings/{userId}")
     suspend fun getBookingsByUserId(
         @Header("Authorization") token: String,
-        @Query("userId") userId: Long // Ensure this is Long, not String
+        @Path("userId") userId: Long // Updated to use @Path for URL parameter
     ): List<Booking>
 }

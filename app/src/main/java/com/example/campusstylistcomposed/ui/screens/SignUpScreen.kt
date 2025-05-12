@@ -25,7 +25,7 @@ import com.example.campusstylistcomposed.ui.viewmodel.SignUpViewModel
 @Composable
 fun SignUpScreen(
     onNavigateToLogin: () -> Unit,
-    onSignupSuccess: (String, Boolean, String?) -> Unit // Changed Long? to String?
+    onSignupSuccess: (String, Boolean, String?, String) -> Unit // Add token parameter
 ) {
     val viewModel: SignUpViewModel = hiltViewModel()
     var email by remember { mutableStateOf("") }
@@ -228,7 +228,12 @@ fun SignUpScreen(
                 CircularProgressIndicator(color = pinkColor)
             } else {
                 Button(
-                    onClick = { viewModel.signUp(onSignupSuccess) },
+                    onClick = {
+                        viewModel.signUp { isHairdresser, token ->
+                            val role = if (isHairdresser) "HAIRDRESSER" else "CLIENT"
+                            onSignupSuccess(role, false, viewModel.userId.value, token)
+                        }
+                    },
                     enabled = email.isNotBlank() && password.isNotBlank(),
                     modifier = Modifier
                         .fillMaxWidth()

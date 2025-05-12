@@ -9,9 +9,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class AuthRepository @Inject constructor(
-    private val dataStore: DataStore<Preferences> // Inject DataStore instead of Context
+    private val dataStore: DataStore<Preferences>
 ) {
     private val tokenKey = stringPreferencesKey("auth_token")
     private val roleKey = stringPreferencesKey("user_role")
@@ -56,5 +58,17 @@ class AuthRepository @Inject constructor(
         _token.value = null
         _role.value = null
         _userId.value = null
+    }
+
+    fun getToken(): String? {
+        return _token.value
+    }
+
+    fun getUserId(): String? {
+        return _userId.value
+    }
+
+    fun getRole(): String? {
+        return _role.value
     }
 }

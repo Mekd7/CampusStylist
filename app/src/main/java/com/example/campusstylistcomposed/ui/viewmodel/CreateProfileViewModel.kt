@@ -8,7 +8,9 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.campusstylistcomposed.data.repository.AuthRepository
 import com.example.campusstylistcomposed.network.ApiService
+import com.example.campusstylistcomposed.network.CreateProfileResponse
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,6 +28,7 @@ import javax.inject.Inject
 @HiltViewModel
 class CreateProfileViewModel @Inject constructor(
     private val apiService: ApiService,
+    private val authRepository: AuthRepository,
     @dagger.hilt.android.qualifiers.ApplicationContext private val context: Context
 ) : ViewModel() {
     private val _name = MutableStateFlow("")
@@ -33,9 +36,6 @@ class CreateProfileViewModel @Inject constructor(
 
     private val _bio = MutableStateFlow("")
     val bio: StateFlow<String> = _bio.asStateFlow()
-
-    private val _token = MutableStateFlow("")
-    val token: StateFlow<String> = _token.asStateFlow()
 
     private val _isHairdresser = MutableStateFlow(false)
     val isHairdresser: StateFlow<Boolean> = _isHairdresser.asStateFlow()
@@ -49,11 +49,14 @@ class CreateProfileViewModel @Inject constructor(
     private val _selectedImageUri = MutableStateFlow<Uri?>(null)
     val selectedImageUri: StateFlow<Uri?> = _selectedImageUri.asStateFlow()
 
+    private val _token = MutableStateFlow("")
+    val token: StateFlow<String> = _token.asStateFlow()
+
     lateinit var imagePickerLauncher: ManagedActivityResultLauncher<PickVisualMediaRequest, Uri?>
 
-    fun setInitialData(token: String, isHairdresser: Boolean) {
-        _token.value = token
+    fun setInitialData(isHairdresser: Boolean, token: String) {
         _isHairdresser.value = isHairdresser
+        _token.value = token
     }
 
     fun updateName(value: String) { _name.value = value }
@@ -90,29 +93,27 @@ class CreateProfileViewModel @Inject constructor(
             _errorMessage.value = null
 
             try {
-                // Create text parts
                 val usernameBody = _name.value.toRequestBody("text/plain".toMediaTypeOrNull())
                 val bioBody = _bio.value.toRequestBody("text/plain".toMediaTypeOrNull())
-
-                // Create image part if available
                 val profilePicturePart = _selectedImageUri.value?.let { uri ->
                     val file = UriToFileConverter.convertUriToFile(uri, context)
                     file?.let {
                         val requestBody = it.asRequestBody("image/*".toMediaTypeOrNull())
-                        MultipartBody.Part.createFormData(
-                            "profilePicture",
-                            it.name,
-                            requestBody
-                        )
+                        MultipartBody.Part.createFormData("profilePicture", it.name, requestBody)
                     }
                 }
 
-                // Make the API call
+                val token = _token.value.ifBlank { authRepository.getToken() ?: "" }
+                if (token.isBlank()) {
+                    _errorMessage.value = "Authentication token is missing. Please log in again."
+                    return@launch
+                }
+
                 val response = apiService.createProfile(
-                    token = "Bearer ${_token.value}", // Add Bearer prefix here
                     username = usernameBody,
                     bio = bioBody,
-                    profilePicture = profilePicturePart
+                    profilePicture = profilePicturePart,
+                    authorization = "Bearer $token"
                 )
 
                 if (response.message == "Profile created successfully") {
@@ -120,8 +121,15 @@ class CreateProfileViewModel @Inject constructor(
                 } else {
                     _errorMessage.value = response.message ?: "Failed to create profile"
                 }
+            } catch (e: retrofit2.HttpException) {
+                if (e.code() == 401) {
+                    _errorMessage.value = "Session expired or unauthorized. Please log in again."
+                } else {
+                    _errorMessage.value = "Error creating profile: ${e.message()}"
+                }
+                e.printStackTrace()
             } catch (e: Exception) {
-                _errorMessage.value = "Error creating profile: ${e.localizedMessage ?: "Unknown error"}"
+                _errorMessage.value = "Error creating profile: ${e.message ?: "Unknown error"}"
                 e.printStackTrace()
             } finally {
                 _isLoading.value = false

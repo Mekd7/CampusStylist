@@ -39,7 +39,7 @@ class SignUpViewModel @Inject constructor(
     fun updatePassword(value: String) { _password.value = value }
     fun setRole(isHairdresser: Boolean) { _isHairdresser.value = isHairdresser }
 
-    fun signUp(onSuccess: (String, Boolean, String?) -> Unit) {
+    fun signUp(onSuccess: (Boolean, String) -> Unit) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
@@ -58,8 +58,7 @@ class SignUpViewModel @Inject constructor(
                     role = response.role,
                     userId = response.userId
                 )
-                // Force hasCreatedProfile to false to always navigate to createProfile
-                onSuccess(response.role, false, response.userId)
+                onSuccess(_isHairdresser.value, response.token)
             } catch (e: Exception) {
                 _errorMessage.value = "Signup failed: ${e.message}"
             } finally {

@@ -41,13 +41,13 @@ import com.example.campusstylistcomposed.ui.viewmodel.CreateProfileViewModel
 )
 @Composable
 fun CreateProfileScreenPreview() {
-    CreateProfileScreen(token = "mock-token", isHairdresser = false, onProfileCreated = {})
+    CreateProfileScreen(isHairdresser = false, token = "", onProfileCreated = {})
 }
 
 @Composable
 fun CreateProfileScreen(
-    token: String,
     isHairdresser: Boolean,
+    token: String,
     onProfileCreated: () -> Unit,
     viewModel: CreateProfileViewModel = hiltViewModel()
 ) {
@@ -57,9 +57,9 @@ fun CreateProfileScreen(
         onResult = { uri -> viewModel.onImageSelected(uri) }
     )
 
-    // Initialize ViewModel with token, role, and image picker
+    // Initialize ViewModel with isHairdresser, token, and image picker
     LaunchedEffect(Unit) {
-        viewModel.setInitialData(token, isHairdresser)
+        viewModel.setInitialData(isHairdresser, token)
         viewModel.initializeImagePicker(imagePickerLauncher)
     }
 
@@ -74,7 +74,6 @@ fun CreateProfileScreen(
     val pinkColor = Color(0xFFE0136C)
     val whiteColor = Color(0xFFFFFFFF)
     val placeholderGrayColor = Color(0xFFD9D9D9)
-    val textGrayColor = Color(0xFFA7A3A3)
 
     Box(
         modifier = Modifier
@@ -222,7 +221,7 @@ fun CreateProfileScreen(
                         viewModel.createProfile(onSuccess = onProfileCreated)
                     },
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxSize()
                         .height(56.dp),
                     shape = RoundedCornerShape(30.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = pinkColor)

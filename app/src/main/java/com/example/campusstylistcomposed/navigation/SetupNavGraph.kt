@@ -41,11 +41,11 @@ fun SetupNavGraph(navController: NavHostController) {
                 onNavigateToSignUp = { navController.navigate("signup") },
                 onLoginSuccess = { token, isHairdresser, userId ->
                     if (isHairdresser) {
-                        navController.navigate("hairdresserHome/$userId") {
+                        navController.navigate("hairdresserHome/$token") {
                             popUpTo("login") { inclusive = true }
                         }
                     } else {
-                        navController.navigate("clientHome/$userId") {
+                        navController.navigate("clientHome/$token") {
                             popUpTo("login") { inclusive = true }
                         }
                     }
@@ -55,50 +55,34 @@ fun SetupNavGraph(navController: NavHostController) {
         composable("signup") {
             SignUpScreen(
                 onNavigateToLogin = { navController.navigate("login") },
-                onSignupSuccess = { role, hasCreatedProfile, userId ->
-                    val isHairdresser = role.uppercase() == "HAIRSTYLIST"
-                    if (hasCreatedProfile) {
-                        if (isHairdresser) {
-                            navController.navigate("hairdresserProfile/$userId/$userId") {
-                                popUpTo("signup") { inclusive = true }
-                            }
-                        } else {
-                            navController.navigate("clientHome/$userId") {
-                                popUpTo("signup") { inclusive = true }
-                            }
-                        }
-                    } else {
-                        navController.navigate("createProfile/$userId/$isHairdresser") {
-                            popUpTo("signup") { inclusive = true }
-                        }
+                onSignupSuccess = { role, hasCreatedProfile, userId, token ->
+                    val isHairdresser = role.uppercase() == "HAIRDRESSER"
+                    navController.navigate("createProfile/$isHairdresser/$token") {
+                        popUpTo("signup") { inclusive = true }
                     }
                 }
             )
         }
         composable(
-            "createProfile/{userId}/{isHairdresser}",
+            "createProfile/{isHairdresser}/{token}",
             arguments = listOf(
-                navArgument("userId") { defaultValue = "" },
-                navArgument("isHairdresser") { defaultValue = "false" }
+                navArgument("isHairdresser") { defaultValue = "false" },
+                navArgument("token") { defaultValue = "" }
             )
         ) { backStackEntry ->
-            val userId = backStackEntry.arguments?.getString("userId") ?: ""
             val isHairdresser = backStackEntry.arguments?.getString("isHairdresser")?.toBoolean() ?: false
-
-            // Fetch token here if needed, or ensure it's passed correctly
-            val token = userId // or get it from your auth state
-
+            val token = backStackEntry.arguments?.getString("token") ?: ""
             CreateProfileScreen(
-                token = token,
                 isHairdresser = isHairdresser,
+                token = token,
                 onProfileCreated = {
                     if (isHairdresser) {
-                        navController.navigate("hairdresserProfile/$userId/$userId") {
-                            popUpTo("createProfile/{userId}/{isHairdresser}") { inclusive = true }
+                        navController.navigate("hairdresserHome/$token") {
+                            popUpTo("createProfile/{isHairdresser}/{token}") { inclusive = true }
                         }
                     } else {
-                        navController.navigate("clientHome/$userId") {
-                            popUpTo("createProfile/{userId}/{isHairdresser}") { inclusive = true }
+                        navController.navigate("clientHome/$token") {
+                            popUpTo("createProfile/{isHairdresser}/{token}") { inclusive = true }
                         }
                     }
                 },
@@ -172,7 +156,6 @@ fun SetupNavGraph(navController: NavHostController) {
                     val encodedDuration = URLEncoder.encode(post.duration, "UTF-8")
                     navController.navigate("hairdresserPostDetail/$token/$hairdresserId/${post.imageId}/$encodedServiceName/$encodedLength/$encodedDuration")
                 },
-                onBookClick = { /* Not applicable */ },
                 navController = { route -> navController.navigate(route) },
                 viewModel = viewModel()
             )
@@ -313,7 +296,7 @@ fun SetupNavGraph(navController: NavHostController) {
                 onHomeClick = { navController.navigate("clientHome/$token") },
                 onOrdersClick = { navController.navigate("orders/$token") },
                 onProfileClick = { navController.navigate("clientProfile/$token") },
-                onBookClick = { navController.navigate("booking/$token/$hairdresserId") }, // Pass hairdresserId
+                onBookClick = { navController.navigate("booking/$token/$hairdresserId") },
                 navController = { route -> navController.navigate(route) }
             )
         }
