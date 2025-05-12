@@ -1,34 +1,26 @@
 package com.example.campusstylistcomposed.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.campusstylistcomposed.R
+import coil.compose.AsyncImage
 import com.example.campusstylistcomposed.ui.components.Footer
 import com.example.campusstylistcomposed.ui.components.FooterType
 import com.example.campusstylistcomposed.ui.viewmodel.HairDresserProfileViewModel
@@ -36,21 +28,21 @@ import com.example.campusstylistcomposed.ui.viewmodel.HairDresserProfileViewMode
 @Composable
 fun HairDresserProfileScreen(
     token: String,
-    hairdresserId: String,
     onLogout: () -> Unit,
     onHomeClick: () -> Unit,
     onOrdersClick: () -> Unit,
     onProfileClick: () -> Unit,
-    onPostClick: (HairdresserPost) -> Unit,
     navController: (String) -> Unit,
     viewModel: HairDresserProfileViewModel = hiltViewModel()
 ) {
-    viewModel.setHairdresserData(hairdresserId)
+    // Initialize ViewModel with token
+    LaunchedEffect(Unit) {
+        viewModel.fetchProfile(token)
+    }
 
     val isLoading by viewModel.isLoading.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
-    val hairdresserName = viewModel.hairdresserName
-    val posts = viewModel.posts
+    val user by viewModel.user.collectAsState()
 
     val backgroundColor = Color(0xFF222020)
     val pinkColor = Color(0xFFE0136C)
@@ -61,92 +53,82 @@ fun HairDresserProfileScreen(
             .fillMaxSize()
             .background(backgroundColor)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = hairdresserName,
-                color = whiteColor,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
+        if (isLoading) {
+            CircularProgressIndicator(
+                color = pinkColor,
+                modifier = Modifier.align(Alignment.Center)
             )
-
-            Image(
-                painter = painterResource(id = R.drawable.profile_icon),
-                contentDescription = "Profile Image",
+        } else {
+            Column(
                 modifier = Modifier
-                    .size(100.dp)
-                    .clip(CircleShape)
-                    .padding(top = 8.dp),
-                contentScale = ContentScale.Crop
-            )
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = user?.username ?: "Hairdresser name",
+                    color = whiteColor,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
+                )
 
-            Text(
-                text = "Hairdresser bio",
-                color = whiteColor,
-                fontSize = 16.sp,
-                modifier = Modifier.padding(top = 8.dp)
-            )
+                AsyncImage(
+                    model = user?.profilePicture ?: "https://via.placeholder.com/100",
+                    contentDescription = "Profile Image",
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                        .padding(top = 8.dp),
+                    contentScale = ContentScale.Crop
+                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = user?.bio ?: "Hairdresser bio",
+                    color = whiteColor,
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
 
-            posts.forEach { post ->
+                Spacer(modifier = Modifier.height(16.dp))
+
                 Button(
-                    onClick = { onPostClick(post) },
+                    onClick = { navController("editProfile/$token") },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
-                        .padding(bottom = 8.dp),
+                        .padding(bottom = 16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = pinkColor, contentColor = whiteColor),
                     shape = CircleShape,
                     enabled = !isLoading
                 ) {
-                    Text("${post.serviceName} (${post.length}, ${post.duration})", fontSize = 16.sp)
+                    Text("Edit Profile", fontSize = 16.sp)
                 }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        viewModel.logout {
+                            onLogout()
+                        }
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = pinkColor, contentColor = whiteColor),
+                    shape = CircleShape,
+                    enabled = !isLoading
+                ) {
+                    Text("Log out", fontSize = 16.sp)
+                }
 
-            Button(
-                onClick = { /* Handle edit profile logic */ },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .padding(bottom = 16.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = pinkColor, contentColor = whiteColor),
-                shape = CircleShape,
-                enabled = !isLoading
-            ) {
-                Text("Edit Profile", fontSize = 16.sp)
-            }
-
-            Button(
-                onClick = {
-                    viewModel.logout {
-                        onLogout()
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = pinkColor, contentColor = whiteColor),
-                shape = CircleShape,
-                enabled = !isLoading
-            ) {
-                Text("Log out", fontSize = 16.sp)
-            }
-
-            errorMessage?.let {
-                Text(
-                    text = "Error: $it",
-                    color = whiteColor,
-                    fontSize = 14.sp,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
+                errorMessage?.let {
+                    Text(
+                        text = "Error: $it",
+                        color = Color.Red,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+                }
             }
         }
 

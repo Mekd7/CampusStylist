@@ -4,6 +4,7 @@ import com.example.campusstylistcomposed.data.AuthRequest
 import com.example.campusstylistcomposed.data.AuthResponse
 import com.example.campusstylistcomposed.data.LoginRequest
 import com.example.campusstylistcomposed.domain.model.Booking
+import com.example.campusstylistcomposed.domain.model.User
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.http.Body
@@ -45,6 +46,15 @@ interface ApiService {
         @Part profilePicture: MultipartBody.Part?,
         @Header("Authorization") authorization: String
     ): CreateProfileResponse
+
+    @GET("profile")
+    suspend fun getProfile(@Header("Authorization") authorization: String): ProfileResponse
+
+    @GET("profile/{id}")
+    suspend fun getProfile(
+        @Path("id") id: Long,
+        @Header("Authorization") authorization: String
+    ): User
 
     @POST("/logout")
     suspend fun logout(@Header("Authorization") token: String): Response<Unit>

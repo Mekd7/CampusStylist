@@ -1,13 +1,14 @@
 package com.example.campusstylistcomposed.ui.viewmodel
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.campusstylistcomposed.data.repository.AuthRepository
 import com.example.campusstylistcomposed.network.ApiService
+import com.example.campusstylistcomposed.domain.model.User
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import retrofit2.Response
 import javax.inject.Inject
@@ -15,17 +16,40 @@ import javax.inject.Inject
 @HiltViewModel
 class ClientProfileViewModel @Inject constructor(
     private val apiService: ApiService,
-    @ApplicationContext private val context: Context
+    private val authRepository: AuthRepository
 ) : ViewModel() {
-
     private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
-    private val _logoutSuccess = MutableStateFlow(false)
-    val logoutSuccess: StateFlow<Boolean> = _logoutSuccess
+    private val _user = MutableStateFlow<User?>(null)
+    val user: StateFlow<User?> = _user.asStateFlow()
+
+    fun fetchProfile(token: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+
+            try {
+                val userId = authRepository.userId.value?.toLongOrNull()
+                    ?: throw IllegalStateException("User ID not found")
+                val response = apiService.getProfile(userId, "Bearer $token")
+                _user.value = response
+            } catch (e: retrofit2.HttpException) {
+                _errorMessage.value = when (e.code()) {
+                    401 -> "Session expired. Please log in again."
+                    403 -> "You can only access your own profile."
+                    else -> "Failed to fetch profile: ${e.message()}"
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Error: ${e.message ?: "Unknown error"}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
 
     fun logout(onSuccess: () -> Unit) {
         viewModelScope.launch {
@@ -33,32 +57,22 @@ class ClientProfileViewModel @Inject constructor(
             _errorMessage.value = null
 
             try {
-                // 1. Get stored token
-                val token = getStoredToken()
-
+                val token = authRepository.token.value
                 if (!token.isNullOrEmpty()) {
-                    // 2. Call logout API
                     val response: Response<Unit> = apiService.logout("Bearer $token")
-
                     if (response.isSuccessful) {
-                        // 3. Clear local session regardless of API response
-                        clearSession()
-                        _logoutSuccess.value = true
-                        onSuccess() // Trigger navigation
+                        authRepository.clearToken()
+                        onSuccess()
                     } else {
                         handleLogoutError(response)
                     }
                 } else {
-                    // No token found - still clear local data
-                    clearSession()
-                    _logoutSuccess.value = true
+                    authRepository.clearToken()
                     onSuccess()
                 }
             } catch (e: Exception) {
                 _errorMessage.value = "Network error: ${e.message}"
-                // Ensure cleanup even if network fails
-                clearSession()
-                _logoutSuccess.value = true
+                authRepository.clearToken()
                 onSuccess()
             } finally {
                 _isLoading.value = false
@@ -66,27 +80,12 @@ class ClientProfileViewModel @Inject constructor(
         }
     }
 
-    private fun getStoredToken(): String? {
-        val sharedPrefs = context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE)
-        return sharedPrefs.getString("auth_token", null)
-    }
-
-    private fun clearSession() {
-        context.getSharedPreferences("auth_prefs", Context.MODE_PRIVATE).edit().apply {
-            remove("auth_token")
-            remove("user_id")
-            remove("user_role")
-            remove("has_created_profile")
-            apply()
-        }
-        // Clear any cached data if needed
-    }
-
-    private fun handleLogoutError(response: Response<*>) {
+    private suspend fun handleLogoutError(response: Response<*>) {
         _errorMessage.value = when (response.code()) {
             401 -> "Session expired"
             500 -> "Server error"
             else -> "Logout failed (${response.code()})"
         }
+        authRepository.clearToken()
     }
 }
