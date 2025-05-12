@@ -13,6 +13,7 @@ import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.Part
 import retrofit2.http.Query
+import retrofit2.Response
 
 data class UserProfile(
     val id: String,
@@ -44,8 +45,8 @@ interface ApiService {
         @Part profilePicture: MultipartBody.Part? // Corrected: No part name in annotation
     ): CreateProfileResponse
 
-    @POST("logout")
-    suspend fun logout(@Header("Authorization") token: String): CreateProfileResponse
+    @POST("/logout")
+    suspend fun logout(@Header("Authorization") token: String): Response<Unit>
 
     @POST("bookings")
     suspend fun createBooking(@Body booking: Booking): Booking

@@ -2,6 +2,7 @@ package com.example.campusstylist.backend.application.controller
 
 import com.example.campusstylist.backend.domain.model.Role
 import com.example.campusstylist.backend.domain.model.User
+import com.example.campusstylist.backend.infrastructure.security.JwtConfig
 import com.example.campusstylist.backend.domain.service.UserService
 import io.ktor.http.*
 import io.ktor.http.content.*
@@ -13,6 +14,10 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.SerializationException
 import java.sql.SQLException
+import java.util.concurrent.ConcurrentHashMap
+import com.auth0.jwt.JWT
+
+val tokenBlacklist = ConcurrentHashMap<String, Long>()
 
 fun Route.userRoutes(userService: UserService) {
     authenticate("auth-jwt") {
@@ -223,6 +228,22 @@ fun Route.userRoutes(userService: UserService) {
     // Logout (both roles, authentication optional)
     post("/logout") {
         try {
+            val token = call.request.header("Authorization")?.removePrefix("Bearer ") ?: run {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Missing token"))
+                return@post
+            }
+
+            // Verify token first (optional but recommended)
+            try {
+                val decodedJWT = JwtConfig.verifyToken(token)
+                if (decodedJWT != null) {
+                    val expiry = JWT.decode(token).expiresAt?.time ?: System.currentTimeMillis()
+                    JwtConfig.blacklistToken(JWT.decode(token).id, expiry)
+                }
+            } catch (e: Exception) {
+                // Token is invalid anyway, but we'll still process logout
+            }
+
             call.respond(HttpStatusCode.OK, mapOf("message" to "Logged out successfully"))
         } catch (e: Exception) {
             call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Server error", "message" to e.message))
